@@ -6,224 +6,514 @@
 <title>旅遊規劃</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ── Design tokens ─────────────────────────────────── */
 :root{
-  --blue:#4AACDB;--green:#34C759;--red:#FF3B30;--orange:#FF9500;--purple:#AF52DE;
-  --gray:#8E8E93;--gray2:#AEAEB2;--gray3:#C7C7CC;--gray4:#D1D1D6;--gray5:#E5E5EA;--gray6:#F2F2F7;
-  --bg:#F2F2F7;--card:#FFFFFF;--text:#000000;--sep:rgba(60,60,67,0.12);
+  --blue:#3B9ECC;--blue-light:rgba(59,158,204,0.12);--blue-glow:rgba(59,158,204,0.25);
+  --green:#25A244;--green-light:rgba(37,162,68,0.12);
+  --red:#E0372B;--red-light:rgba(224,55,43,0.1);
+  --orange:#E08600;--orange-light:rgba(224,134,0,0.12);
+  --purple:#9B44C8;--purple-light:rgba(155,68,200,0.12);
+  --gray:#6E6E73;--gray2:#9A9AA0;--gray3:#C2C2C8;--gray4:#D8D8DC;
+  --gray5:#EBEBEF;--gray6:#F4F4F8;
+  --bg:#EEEEF3;--card:#FFFFFF;--card2:#F9F9FB;--text:#0A0A0F;--text2:#3A3A42;
+  --sep:rgba(0,0,0,0.07);--sep2:rgba(0,0,0,0.04);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06),0 0.5px 1px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08),0 1px 3px rgba(0,0,0,0.05);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.12),0 2px 6px rgba(0,0,0,0.06);
   --tab-h:83px;--safe-top:47px;--safe-bot:34px;
+  --radius-sm:10px;--radius-md:14px;--radius-lg:18px;--radius-xl:22px;
   --font:'Noto Sans TC',-apple-system,sans-serif;
+  --transition:0.18s cubic-bezier(0.4,0,0.2,1);
 }
+
+/* ── Dark mode ──────────────────────────────────────── */
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#111114;--card:#1C1C20;--card2:#242428;--text:#F2F2F7;--text2:#AEAEB8;
+    --sep:rgba(255,255,255,0.08);--sep2:rgba(255,255,255,0.04);
+    --gray:#8E8E98;--gray2:#636368;--gray3:#3E3E44;--gray4:#2E2E34;
+    --gray5:#232328;--gray6:#1A1A1E;
+    --shadow-sm:0 1px 4px rgba(0,0,0,0.3);
+    --shadow-md:0 4px 16px rgba(0,0,0,0.4);
+    --shadow-lg:0 8px 32px rgba(0,0,0,0.5);
+    --blue:#5DB8E8;--blue-light:rgba(93,184,232,0.14);--blue-glow:rgba(93,184,232,0.2);
+    --green:#30C060;--green-light:rgba(48,192,96,0.14);
+    --red:#FF453A;--red-light:rgba(255,69,58,0.12);
+    --orange:#FFB340;--orange-light:rgba(255,179,64,0.14);
+    --purple:#BF5AF2;--purple-light:rgba(191,90,242,0.14);
+  }
+  .status-bar,.nav-bar{background:rgba(17,17,20,0.96)!important;}
+  .tab-bar{background:rgba(17,17,20,0.96)!important;}
+  .seg-btn.active{background:var(--gray4)!important;}
+  .seg-wrap{background:var(--gray5)!important;}
+  .sum-inner{background:var(--card2)!important;}
+  .m-input,.m-select,.mem-input{background:var(--gray5)!important;color:var(--text)!important;}
+  .cur-toggle,.m-chip,.m-cat,.mem-chip{background:var(--gray5)!important;}
+  .m-cat.on,.m-chip.on{background:var(--blue-light)!important;}
+  .modal-sheet{background:var(--card)!important;}
+  .ev-detail-body{background:var(--gray6)!important;}
+}
+
+/* ── Reset & base ───────────────────────────────────── */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+html,body{height:100%;}
+body{
+  font-family:var(--font);background:var(--bg);color:var(--text);
+  min-height:100vh;max-width:430px;margin:0 auto;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  position:relative; /* Contain fixed children within body bounds */
+}
 
-/* Status + Nav */
-.status-bar{height:var(--safe-top);background:var(--card);display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0;font-size:15px;font-weight:600;position:sticky;top:0;z-index:100;}
-.status-bar .time{font-size:16px;font-weight:700;}
-.status-icons{display:flex;gap:6px;align-items:center;font-size:12px;}
-.nav-bar{background:rgba(255,255,255,0.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:0.5px solid var(--sep);padding:8px 16px 12px;position:sticky;top:47px;z-index:99;}
-.nav-bar h1{font-size:28px;font-weight:700;letter-spacing:-0.5px;}
-.nav-subtitle{font-size:13px;color:var(--gray);margin-top:2px;}
+/* ── Status bar ─────────────────────────────────────── */
+.status-bar{
+  height:var(--safe-top);background:var(--card);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px 0;position:sticky;top:0;z-index:100;
+  border-bottom:0.5px solid var(--sep2);
+}
+.status-bar .time{font-size:15px;font-weight:700;letter-spacing:0.2px;}
+.status-icons{display:flex;gap:5px;align-items:center;font-size:11px;color:var(--gray);}
 
-/* Tabs */
-.tab-content{display:none;padding-bottom:calc(var(--tab-h) + 8px);}
+/* ── Nav bar ────────────────────────────────────────── */
+.nav-bar{
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:0.5px solid var(--sep);padding:8px 16px 13px;
+  position:sticky;top:47px;z-index:99;
+}
+@media(prefers-color-scheme:dark){.nav-bar{background:rgba(17,17,20,0.92)!important;}}
+.nav-bar h1{font-size:27px;font-weight:700;letter-spacing:-0.6px;color:var(--text);}
+.nav-subtitle{font-size:12px;color:var(--gray);margin-top:2px;letter-spacing:0.1px;}
+
+/* ── Tab content ────────────────────────────────────── */
+.tab-content{display:none;padding-bottom:calc(var(--tab-h) + 12px);}
 .tab-content.active{display:block;}
 
-/* Tab Bar */
-.tab-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:var(--tab-h);background:rgba(255,255,255,0.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:0.5px solid var(--sep);display:flex;z-index:100;padding-bottom:var(--safe-bot);}
-.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding-top:8px;}
-.tab-item:active{opacity:0.6;}
-.tab-svg{width:26px;height:26px;}
-.tab-svg path,.tab-svg rect,.tab-svg circle,.tab-svg polyline,.tab-svg line,.tab-svg polygon{stroke:var(--gray3);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.tab-item.active .tab-svg path,.tab-item.active .tab-svg rect,.tab-item.active .tab-svg circle,.tab-item.active .tab-svg polyline,.tab-item.active .tab-svg line,.tab-item.active .tab-svg polygon{stroke:var(--blue);}
-.tab-label{font-size:10px;font-weight:500;color:var(--gray2);}
+/* ── Tab bar ────────────────────────────────────────── */
+.tab-bar{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;height:var(--tab-h);
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-top:0.5px solid var(--sep);display:flex;z-index:100;padding-bottom:var(--safe-bot);
+}
+.tab-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;cursor:pointer;padding-top:8px;
+  transition:opacity var(--transition);
+}
+.tab-item:active{opacity:0.5;}
+.tab-svg{width:25px;height:25px;}
+.tab-svg path,.tab-svg rect,.tab-svg circle,.tab-svg polyline,.tab-svg line,.tab-svg polygon{
+  stroke:var(--gray3);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke var(--transition);
+}
+.tab-item.active .tab-svg path,.tab-item.active .tab-svg rect,
+.tab-item.active .tab-svg circle,.tab-item.active .tab-svg polyline,
+.tab-item.active .tab-svg line,.tab-item.active .tab-svg polygon{stroke:var(--blue);}
+.tab-label{font-size:10px;font-weight:600;color:var(--gray2);letter-spacing:0.2px;transition:color var(--transition);}
 .tab-item.active .tab-label{color:var(--blue);}
 
-/* HERO CARD — compact, name editable */
-.hero-card{margin:12px 16px;border-radius:20px;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);color:white;padding:18px 20px;box-shadow:0 4px 20px rgba(0,0,0,0.15);position:relative;}
-.hero-name-row{display:flex;align-items:center;gap:8px;}
-.hero-name{font-size:24px;font-weight:700;letter-spacing:-0.5px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.hero-edit-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px;opacity:0.8;}
-.hero-edit-btn:active{opacity:0.5;}
-.hero-dates{font-size:13px;opacity:0.75;margin-top:5px;}
-.hero-plane{position:absolute;top:18px;right:20px;font-size:30px;opacity:0.85;}
+/* ── Hero card ──────────────────────────────────────── */
+.hero-card{
+  margin:14px 16px 10px;border-radius:var(--radius-xl);
+  background:linear-gradient(145deg,#0d1117 0%,#161d2e 45%,#0e2040 100%);
+  color:white;padding:20px 22px 18px;box-shadow:var(--shadow-lg);
+  position:relative;overflow:hidden;
+}
+.hero-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 80% 20%,rgba(59,158,204,0.18) 0%,transparent 60%),
+             radial-gradient(ellipse at 20% 80%,rgba(93,93,200,0.12) 0%,transparent 55%);
+  pointer-events:none;
+}
+.hero-name-row{display:flex;align-items:center;gap:8px;position:relative;}
+.hero-name{
+  font-size:23px;font-weight:700;letter-spacing:-0.4px;
+  flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.hero-edit-btn{
+  width:28px;height:28px;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.25);
+  background:rgba(255,255,255,0.07);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;font-size:12px;
+  transition:all var(--transition);
+}
+.hero-edit-btn:active{background:rgba(255,255,255,0.15);}
+.hero-dates{font-size:12.5px;opacity:0.65;margin-top:6px;letter-spacing:0.1px;position:relative;}
+.hero-plane{position:absolute;top:16px;right:20px;font-size:28px;opacity:0.5;filter:blur(0.3px);}
 
-/* Cards */
-.card{background:var(--card);border-radius:16px;margin:0 16px 12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+/* ── General cards ──────────────────────────────────── */
+.card{
+  background:var(--card);border-radius:var(--radius-lg);
+  margin:0 16px 12px;overflow:hidden;box-shadow:var(--shadow-sm);
+}
 .card-row{display:flex;align-items:center;padding:13px 16px;border-bottom:0.5px solid var(--sep);gap:12px;}
 .card-row:last-child{border-bottom:none;}
-.section-header{padding:14px 16px 8px;font-size:18px;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+.section-header{
+  padding:14px 16px 8px;font-size:17px;font-weight:700;
+  display:flex;justify-content:space-between;align-items:center;
+}
 
-/* DAY HEADER */
-.day-header{padding:14px 16px 6px;display:flex;align-items:center;gap:7px;flex-wrap:nowrap;}
-.day-num{font-size:17px;font-weight:700;flex-shrink:0;}
-.day-date{font-size:13px;color:var(--gray);flex-shrink:0;}
-.day-badge{font-size:11px;background:var(--blue);color:white;border-radius:6px;padding:1px 7px;font-weight:500;flex-shrink:0;}
+/* ── Day header ─────────────────────────────────────── */
+.day-header{
+  padding:16px 16px 6px;display:flex;align-items:center;
+  gap:7px;flex-wrap:nowrap;
+}
+.day-num{font-size:16px;font-weight:700;color:var(--text);flex-shrink:0;}
+.day-date{font-size:12px;color:var(--gray);flex-shrink:0;font-weight:500;}
+.day-badge{
+  font-size:10.5px;background:var(--blue-light);color:var(--blue);
+  border-radius:6px;padding:2px 8px;font-weight:600;flex-shrink:0;
+}
 .day-weather{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;}
-.day-weather-main{font-size:12px;color:var(--gray);white-space:nowrap;}
-.day-weather-rain{font-size:11px;color:var(--blue);opacity:0.8;}
-.day-add-btn{margin-left:6px;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--blue);color:var(--blue);font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;line-height:1;}
+.day-weather-main{font-size:11.5px;color:var(--gray);white-space:nowrap;font-weight:500;}
+.day-weather-rain{font-size:10.5px;font-weight:600;}
+.day-add-btn{
+  margin-left:4px;width:26px;height:26px;border-radius:50%;
+  background:var(--blue-light);color:var(--blue);
+  font-size:18px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;line-height:1;transition:all var(--transition);
+}
+.day-add-btn:active{background:var(--blue-glow);}
 
-/* TIMELINE */
+/* ── Timeline ───────────────────────────────────────── */
 .timeline-item{display:flex;padding:0 16px;}
-.timeline-left{display:flex;flex-direction:column;align-items:center;width:48px;flex-shrink:0;}
-.tl-time{font-size:11px;color:var(--gray);font-weight:500;text-align:center;margin-top:13px;}
-.tl-dot{width:10px;height:10px;border-radius:50%;background:var(--blue);margin:4px 0;flex-shrink:0;}
-.tl-dot.green{background:var(--green);}
-.tl-dot.orange{background:var(--orange);}
-.tl-dot.purple{background:var(--purple);}
-.tl-line{flex:1;width:2px;background:var(--gray5);}
-.tl-card{flex:1;background:var(--card);border-radius:12px;padding:11px 12px;margin:5px 0 5px 8px;box-shadow:0 1px 3px rgba(0,0,0,0.06);cursor:pointer;position:relative;}
-.tl-card:active{background:var(--gray6);}
-.tc-title{font-size:15px;font-weight:600;padding-right:18px;}
-.tc-sub{font-size:12px;color:var(--gray);margin-top:1px;}
-.tc-addr{font-size:11px;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:3px;}
-.tc-tags{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap;}
-.tc-chevron{position:absolute;top:50%;right:10px;transform:translateY(-50%);color:var(--gray3);font-size:16px;}
-.tag{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;}
-.tag-blue{background:rgba(74,172,219,0.12);color:var(--blue);}
-.tag-green{background:rgba(52,199,89,0.12);color:var(--green);}
-.tag-orange{background:rgba(255,149,0,0.12);color:var(--orange);}
+.timeline-left{display:flex;flex-direction:column;align-items:center;width:46px;flex-shrink:0;}
+.tl-time{font-size:11px;color:var(--gray);font-weight:600;text-align:center;margin-top:14px;letter-spacing:0.2px;}
+.tl-dot{
+  width:9px;height:9px;border-radius:50%;background:var(--blue);
+  margin:5px 0;flex-shrink:0;box-shadow:0 0 0 2px var(--blue-glow);
+}
+.tl-dot.green{background:var(--green);box-shadow:0 0 0 2px var(--green-light);}
+.tl-dot.orange{background:var(--orange);box-shadow:0 0 0 2px var(--orange-light);}
+.tl-dot.purple{background:var(--purple);box-shadow:0 0 0 2px var(--purple-light);}
+.tl-line{flex:1;width:1.5px;background:var(--sep);margin:0 auto;}
+.tl-card{
+  flex:1;background:var(--card);border-radius:var(--radius-md);
+  padding:12px 13px;margin:4px 0 4px 10px;
+  box-shadow:var(--shadow-sm);cursor:pointer;position:relative;
+  transition:all var(--transition);border:0.5px solid var(--sep2);
+}
+.tl-card:active{background:var(--card2);transform:scale(0.99);}
+.tc-title{font-size:14.5px;font-weight:600;padding-right:20px;color:var(--text);}
+.tc-sub{font-size:12px;color:var(--gray);margin-top:2px;line-height:1.4;}
+.tc-addr{
+  font-size:11px;color:var(--blue);text-decoration:none;
+  display:inline-flex;align-items:center;gap:3px;margin-top:4px;font-weight:500;
+}
+.tc-tags{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;}
+.tc-chevron{
+  position:absolute;top:50%;right:11px;transform:translateY(-50%);
+  color:var(--gray3);font-size:15px;font-weight:300;
+}
+.tag{font-size:10.5px;padding:2px 9px;border-radius:20px;font-weight:600;letter-spacing:0.1px;}
+.tag-blue{background:var(--blue-light);color:var(--blue);}
+.tag-green{background:var(--green-light);color:var(--green);}
+.tag-orange{background:var(--orange-light);color:var(--orange);}
 
-/* PREPARE */
-.sum-bar{background:var(--card);border-radius:16px;margin:10px 16px 4px;padding:13px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
-.sum-circle{width:48px;height:48px;border-radius:50%;background:conic-gradient(var(--green) 0%,var(--green) var(--pct,0%),var(--gray5) var(--pct,0%));display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.sum-inner{width:36px;height:36px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--green);}
-.sum-main{font-size:15px;font-weight:600;}
-.sum-sub{font-size:12px;color:var(--gray);}
-.cl-cat{background:var(--card);border-radius:16px;margin:0 16px 10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
-.cl-cat-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;border-bottom:0.5px solid var(--sep);}
-.cl-cat-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;}
-.cl-prog-txt{font-size:12px;color:var(--gray);}
-.cl-arrow{color:var(--gray);font-size:12px;transition:transform 0.2s;}
+/* ── Tenki strip ────────────────────────────────────── */
+.tenki-strip{
+  margin:0 16px 8px;background:var(--blue-light);
+  border:0.5px solid rgba(59,158,204,0.2);
+  border-radius:var(--radius-sm);padding:8px 13px;
+  display:flex;align-items:center;gap:8px;
+}
+.tenki-logo{font-size:11px;color:var(--blue);font-weight:700;white-space:nowrap;}
+.tenki-divider{width:1px;height:14px;background:rgba(59,158,204,0.25);}
+.tenki-info{flex:1;font-size:11px;color:var(--gray);}
+.tenki-refresh{font-size:11px;color:var(--blue);cursor:pointer;white-space:nowrap;font-weight:600;}
+
+/* ── Prepare ─────────────────────────────────────────── */
+.sum-bar{
+  background:var(--card);border-radius:var(--radius-lg);
+  margin:12px 16px 8px;padding:15px 16px;
+  display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-sm);
+}
+.sum-circle{
+  width:52px;height:52px;border-radius:50%;
+  background:conic-gradient(var(--green) 0%, var(--green) var(--pct,0%), var(--gray5) var(--pct,0%));
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.sum-inner{
+  width:40px;height:40px;border-radius:50%;background:var(--card);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--green);
+}
+.sum-main{font-size:15px;font-weight:600;color:var(--text);}
+.sum-sub{font-size:12px;color:var(--gray);margin-top:2px;}
+.cl-cat{
+  background:var(--card);border-radius:var(--radius-lg);
+  margin:0 16px 10px;overflow:hidden;box-shadow:var(--shadow-sm);
+}
+.cl-cat-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 16px;cursor:pointer;border-bottom:0.5px solid var(--sep);
+  transition:background var(--transition);
+}
+.cl-cat-hdr:active{background:var(--card2);}
+.cl-cat-title{display:flex;align-items:center;gap:9px;font-size:14.5px;font-weight:600;}
+.cl-prog-txt{font-size:12px;color:var(--gray);font-weight:400;}
+.cl-arrow{color:var(--gray2);font-size:11px;transition:transform 0.22s;}
 .cl-arrow.collapsed{transform:rotate(-90deg);}
-.prog-bar{height:3px;background:var(--gray5);}
-.prog-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.4s;}
-.cl-item{display:flex;align-items:center;padding:11px 16px;border-bottom:0.5px solid var(--sep);gap:11px;cursor:pointer;}
+.prog-bar{height:2.5px;background:var(--gray5);}
+.prog-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.5s cubic-bezier(0.4,0,0.2,1);}
+.cl-item{
+  display:flex;align-items:center;padding:12px 16px;
+  border-bottom:0.5px solid var(--sep);gap:12px;cursor:pointer;
+  transition:background var(--transition);
+}
 .cl-item:last-child{border-bottom:none;}
-.cl-item:active{background:rgba(0,0,0,0.03);}
-.chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--gray3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;}
-.chk.on{background:var(--green);border-color:var(--green);}
+.cl-item:active{background:var(--card2);}
+.chk{
+  width:22px;height:22px;border-radius:50%;border:2px solid var(--gray3);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+.chk.on{background:var(--green);border-color:var(--green);box-shadow:0 0 0 3px var(--green-light);}
 .chk.on::after{content:'✓';color:white;font-size:12px;font-weight:700;}
-.cl-txt{flex:1;font-size:15px;transition:all 0.2s;}
+.cl-txt{flex:1;font-size:14.5px;transition:all 0.2s;color:var(--text);}
 .cl-txt.done{color:var(--gray2);text-decoration:line-through;}
-.cl-del{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--red);font-size:19px;opacity:0;cursor:pointer;}
+.cl-del{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--red);font-size:18px;opacity:0;cursor:pointer;}
 .edit-mode .cl-del{opacity:1;}
-.cl-add{display:flex;align-items:center;padding:11px 16px;gap:10px;color:var(--blue);cursor:pointer;font-size:14px;}
+.cl-add{display:flex;align-items:center;padding:11px 16px;gap:10px;color:var(--blue);cursor:pointer;font-size:14px;font-weight:500;}
 .cl-add:active{opacity:0.6;}
-.cl-in-row{display:flex;align-items:center;padding:8px 16px;gap:8px;border-bottom:0.5px solid var(--sep);}
+.cl-in-row{display:flex;align-items:center;padding:9px 16px;gap:8px;border-bottom:0.5px solid var(--sep);}
 .cl-in{flex:1;border:none;outline:none;font-size:15px;font-family:var(--font);background:transparent;color:var(--text);}
 .cl-in::placeholder{color:var(--gray2);}
 .cl-ok{color:var(--blue);font-size:14px;font-weight:600;cursor:pointer;padding:4px 6px;}
 .cl-cancel{color:var(--gray);font-size:14px;cursor:pointer;padding:4px 6px;}
 
-/* ACCOUNT */
-.acct-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;}
-.add-exp-btn{display:flex;align-items:center;gap:6px;background:var(--blue);color:white;border:none;border-radius:20px;padding:8px 16px;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;box-shadow:0 2px 8px rgba(74,172,219,0.3);transition:opacity 0.15s;}
-.add-exp-btn:active{opacity:0.8;}
-.budget-hero{margin:0 16px 12px;border-radius:20px;background:linear-gradient(135deg,#1C1C1E,#2C2C2E);color:white;padding:18px;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
-.bh-label{font-size:12px;opacity:0.6;}
-.bh-amount{font-size:32px;font-weight:700;letter-spacing:-1px;margin-top:2px;}
-.bh-cur{font-size:16px;opacity:0.7;}
-.bh-bars{display:flex;gap:10px;margin-top:12px;}
+/* ── Account / expenses ─────────────────────────────── */
+.acct-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;}
+.add-exp-btn{
+  display:flex;align-items:center;gap:6px;background:var(--blue);color:white;
+  border:none;border-radius:20px;padding:9px 16px;font-size:13.5px;font-weight:600;
+  font-family:var(--font);cursor:pointer;
+  box-shadow:0 2px 10px var(--blue-glow);
+  transition:all var(--transition);
+}
+.add-exp-btn:active{opacity:0.82;transform:scale(0.97);}
+.budget-hero{
+  margin:0 16px 12px;border-radius:var(--radius-xl);
+  background:linear-gradient(145deg,#111116 0%,#1A1A22 50%,#141420 100%);
+  color:white;padding:20px;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;
+}
+.budget-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 90% 10%,rgba(93,184,232,0.12) 0%,transparent 55%);
+  pointer-events:none;
+}
+.bh-label{font-size:11.5px;opacity:0.55;letter-spacing:0.3px;font-weight:500;}
+.bh-amount{font-size:34px;font-weight:700;letter-spacing:-1.5px;margin-top:3px;}
+.bh-cur{font-size:16px;opacity:0.6;font-weight:500;}
+.bh-bars{display:flex;gap:10px;margin-top:14px;}
 .bh-bar-item{flex:1;}
-.bh-bar-lbl{font-size:10px;opacity:0.6;margin-bottom:4px;}
-.bh-bar-track{height:3px;background:rgba(255,255,255,0.15);border-radius:2px;}
-.bh-bar-fill{height:100%;border-radius:2px;transition:width 0.4s;}
-.bh-bar-amt{font-size:12px;font-weight:600;margin-top:3px;}
-.seg-wrap{margin:0 16px 10px;background:var(--gray5);border-radius:10px;padding:2px;display:flex;}
-.seg-btn{flex:1;padding:6px 2px;border-radius:8px;text-align:center;font-size:11px;font-weight:500;cursor:pointer;color:var(--text);}
-.seg-btn.active{background:white;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
-.exp-item{display:flex;align-items:center;padding:11px 16px;border-bottom:0.5px solid var(--sep);gap:11px;}
+.bh-bar-lbl{font-size:10px;opacity:0.55;margin-bottom:5px;font-weight:500;letter-spacing:0.2px;}
+.bh-bar-track{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;}
+.bh-bar-fill{height:100%;border-radius:2px;transition:width 0.5s cubic-bezier(0.4,0,0.2,1);}
+.bh-bar-amt{font-size:11.5px;font-weight:600;margin-top:4px;}
+.seg-wrap{
+  margin:0 16px 12px;background:var(--gray5);border-radius:var(--radius-sm);
+  padding:3px;display:flex;
+}
+.seg-btn{
+  flex:1;padding:6px 2px;border-radius:8px;text-align:center;
+  font-size:11px;font-weight:500;cursor:pointer;color:var(--gray);
+  transition:all var(--transition);
+}
+.seg-btn.active{background:var(--card);box-shadow:var(--shadow-sm);color:var(--text);font-weight:600;}
+.exp-item{display:flex;align-items:center;padding:12px 16px;border-bottom:0.5px solid var(--sep);gap:12px;}
 .exp-item:last-child{border-bottom:none;}
-.exp-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+.exp-ico{
+  width:40px;height:40px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;
+  font-size:19px;flex-shrink:0;
+}
 .exp-content{flex:1;min-width:0;}
-.exp-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.exp-meta{font-size:12px;color:var(--gray);margin-top:1px;}
+.exp-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.exp-meta{font-size:11.5px;color:var(--gray);margin-top:2px;}
 .exp-right{text-align:right;flex-shrink:0;}
-.exp-amt{font-size:14px;font-weight:600;color:var(--red);}
-.exp-split{font-size:11px;color:var(--gray);margin-top:1px;}
-.cat-transport{background:rgba(74,172,219,0.1);}
-.cat-food{background:rgba(255,149,0,0.1);}
-.cat-hotel{background:rgba(175,82,222,0.1);}
-.cat-shop{background:rgba(255,59,48,0.1);}
-.cat-activity{background:rgba(52,199,89,0.1);}
-.cat-other{background:rgba(142,142,147,0.1);}
+.exp-amt{font-size:14px;font-weight:700;color:var(--red);}
+.exp-split{font-size:10.5px;color:var(--gray);margin-top:2px;}
+.cat-transport{background:var(--blue-light);}
+.cat-food{background:var(--orange-light);}
+.cat-hotel{background:var(--purple-light);}
+.cat-shop{background:var(--red-light);}
+.cat-activity{background:var(--green-light);}
+.cat-other{background:var(--gray5);}
 
-/* ===== MODALS — fixed sizing ===== */
+/* ── Modals ──────────────────────────────────────────── */
 .modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;
-  display:none;align-items:flex-end;
-  /* center within 430px max */
-  max-width:430px;left:50%;transform:translateX(-50%);
+  /* position:absolute within body — always aligns with the app container */
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:100%;
+  min-height:100vh;
+  background:rgba(0,0,0,0.55);z-index:9999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
-.modal-overlay.open{display:flex;}
-/* Standard bottom sheet */
+.modal-overlay.open{display:flex;position:fixed;width:100%;height:100%;top:0;left:0;}
 .modal-sheet{
-  background:var(--card);border-radius:20px 20px 0 0;width:100%;
-  padding:12px 16px calc(var(--safe-bot)+12px);
-  animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1);
-  max-height:88vh;overflow-y:auto;
+  background:var(--card);
+  border-radius:22px;
+  width:calc(100% - 40px);
+  max-width:390px;
+  animation:floatIn 0.28s cubic-bezier(0.34,1.2,0.64,1);
+  max-height:calc(100vh - 80px);
+  overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3),0 6px 20px rgba(0,0,0,0.15);
+  flex-shrink:0;
 }
-@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
-.modal-handle{width:36px;height:4px;background:var(--gray4);border-radius:2px;margin:0 auto 14px;}
-.modal-title{font-size:17px;font-weight:700;margin-bottom:14px;}
-.mf{margin-bottom:11px;}
-.mf label{font-size:11px;color:var(--gray);margin-bottom:4px;display:block;font-weight:500;text-transform:uppercase;letter-spacing:0.4px;}
-.m-input{background:var(--gray6);border:none;border-radius:10px;padding:11px 12px;width:100%;font-size:15px;font-family:var(--font);color:var(--text);outline:none;}
+/* Scrollable inner body — padding here is never clipped */
+.modal-body{
+  padding:22px 20px 24px;
+  overflow-y:auto;
+  max-height:calc(100vh - 80px);
+  -webkit-overflow-scrolling:touch;
+  box-sizing:border-box;
+  width:100%;
+}
+@keyframes floatIn{
+  from{opacity:0;transform:translateY(12px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.modal-handle{display:none;}
+.modal-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.modal-title{font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.3px;margin:0;}
+.modal-close{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--gray5);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:13px;color:var(--gray);
+  flex-shrink:0;transition:all var(--transition);font-weight:600;
+}
+.modal-close:active{background:var(--gray4);}
+.mf{margin-bottom:14px;}
+.mf label{
+  font-size:11px;color:var(--gray);margin-bottom:6px;display:block;
+  font-weight:700;text-transform:uppercase;letter-spacing:0.6px;
+}
+.m-input{
+  background:var(--gray6);border:1.5px solid transparent;border-radius:var(--radius-sm);
+  padding:13px 14px;width:100%;font-size:15px;
+  font-family:var(--font);color:var(--text);outline:none;
+  transition:border-color 0.15s,box-shadow 0.15s,background 0.15s;
+}
+.m-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow);background:var(--card);}
 .m-input::placeholder{color:var(--gray2);}
-.m-select{background:var(--gray6);border:none;border-radius:10px;padding:11px 12px;font-size:15px;font-family:var(--font);color:var(--text);outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%238E8E93' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;width:100%;}
-.modal-cats{display:flex;gap:7px;flex-wrap:wrap;}
-.m-cat{padding:7px 11px;border-radius:20px;background:var(--gray6);font-size:13px;cursor:pointer;border:2px solid transparent;transition:all 0.15s;}
-.m-cat.on{border-color:var(--blue);background:rgba(74,172,219,0.1);color:var(--blue);font-weight:500;}
-.m-confirm{background:var(--blue);color:white;border:none;border-radius:13px;padding:13px;width:100%;font-size:16px;font-weight:600;font-family:var(--font);cursor:pointer;margin-top:6px;}
-.m-confirm:active{opacity:0.85;}
-.m-cancel{text-align:center;margin-top:10px;color:var(--gray);font-size:14px;cursor:pointer;padding:4px 0;}
-.cur-toggle{display:flex;background:var(--gray6);border-radius:10px;overflow:hidden;flex-shrink:0;}
-.cur-btn{padding:11px 13px;font-size:14px;font-weight:500;cursor:pointer;color:var(--gray);transition:all 0.15s;white-space:nowrap;}
+.m-select{
+  background:var(--gray6);border:1.5px solid transparent;border-radius:var(--radius-sm);
+  padding:13px 14px;font-size:15px;font-family:var(--font);color:var(--text);
+  outline:none;appearance:none;-webkit-appearance:none;width:100%;
+  transition:border-color 0.15s;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%238E8E93' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;
+}
+.m-select:focus{border-color:var(--blue);}
+.modal-cats{display:flex;gap:8px;flex-wrap:wrap;}
+.m-cat{
+  padding:8px 14px;border-radius:20px;background:var(--gray6);
+  font-size:13px;cursor:pointer;border:1.5px solid transparent;
+  transition:all 0.15s;font-weight:500;
+}
+.m-cat.on{border-color:var(--blue);background:var(--blue-light);color:var(--blue);font-weight:700;}
+.m-confirm{
+  background:var(--blue);color:white;border:none;border-radius:var(--radius-md);
+  padding:15px;width:100%;font-size:16px;font-weight:700;
+  font-family:var(--font);cursor:pointer;margin-top:10px;
+  box-shadow:0 4px 16px var(--blue-glow);
+  transition:all var(--transition);letter-spacing:0.2px;
+}
+.m-confirm:active{opacity:0.82;transform:scale(0.99);}
+.m-cancel{
+  text-align:center;margin-top:12px;color:var(--gray);
+  font-size:14px;cursor:pointer;padding:7px 0;font-weight:500;
+}
+.m-cancel:active{opacity:0.6;}
+.cur-toggle{display:flex;background:var(--gray6);border-radius:var(--radius-sm);overflow:hidden;flex-shrink:0;}
+.cur-btn{padding:13px 14px;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--gray);transition:all var(--transition);white-space:nowrap;}
 .cur-btn.on{background:var(--blue);color:white;}
 .m-chips{display:flex;flex-wrap:wrap;gap:7px;}
-.m-chip{padding:6px 11px;border-radius:20px;background:var(--gray6);font-size:13px;cursor:pointer;border:2px solid transparent;}
-.m-chip.on{border-color:var(--blue);background:rgba(74,172,219,0.1);color:var(--blue);}
-.mem-chip{display:flex;align-items:center;gap:6px;background:var(--gray6);border-radius:20px;padding:6px 11px;font-size:13px;}
-.mem-chip.me{background:rgba(74,172,219,0.1);color:var(--blue);}
-.mem-chip .rm{color:var(--gray);cursor:pointer;font-size:15px;line-height:1;}
+.m-chip{
+  padding:6px 12px;border-radius:20px;background:var(--gray6);
+  font-size:13px;cursor:pointer;border:1.5px solid transparent;
+  transition:all var(--transition);
+}
+.m-chip.on{border-color:var(--blue);background:var(--blue-light);color:var(--blue);}
+.mem-chip{display:flex;align-items:center;gap:6px;background:var(--gray6);border-radius:20px;padding:6px 12px;font-size:13px;}
+.mem-chip.me{background:var(--blue-light);color:var(--blue);}
+.mem-chip .rm{color:var(--gray2);cursor:pointer;font-size:15px;line-height:1;}
 .mem-add-row{display:flex;gap:8px;margin-top:12px;}
-.mem-input{flex:1;background:var(--gray6);border:none;border-radius:10px;padding:11px 12px;font-size:14px;font-family:var(--font);color:var(--text);outline:none;}
+.mem-input{flex:1;background:var(--gray6);border:none;border-radius:var(--radius-sm);padding:12px 13px;font-size:14px;font-family:var(--font);color:var(--text);outline:none;}
 .mem-input::placeholder{color:var(--gray2);}
-.mem-add{background:var(--blue);color:white;border:none;border-radius:10px;padding:11px 15px;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;}
-.radio-grp{display:flex;gap:14px;align-items:center;}
-.radio-grp label{display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;}
-.radio-grp input{accent-color:var(--blue);width:15px;height:15px;}
+.mem-add{background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;}
 
-/* Event detail sheet — action buttons */
-.ev-detail-actions{display:flex;gap:10px;margin-top:14px;}
-.ev-detail-btn{flex:1;padding:12px;border-radius:12px;border:none;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;}
-.ev-detail-btn.edit{background:rgba(74,172,219,0.12);color:var(--blue);}
-.ev-detail-btn.delete{background:rgba(255,59,48,0.1);color:var(--red);}
-.ev-detail-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--sep);}
+/* ── Event detail sheet ─────────────────────────────── */
+.ev-detail-actions{display:flex;gap:10px;margin-top:18px;}
+.ev-detail-btn{
+  flex:1;padding:14px;border-radius:var(--radius-md);
+  border:none;font-size:15px;font-weight:600;
+  font-family:var(--font);cursor:pointer;transition:all var(--transition);
+}
+.ev-detail-btn.edit{background:var(--blue-light);color:var(--blue);}
+.ev-detail-btn.edit:active{opacity:0.75;}
+.ev-detail-btn.delete{background:var(--red-light);color:var(--red);}
+.ev-detail-btn.delete:active{opacity:0.75;}
+.ev-detail-body{background:var(--gray6);border-radius:var(--radius-md);overflow:hidden;margin-top:8px;}
+.ev-detail-row{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:0.5px solid var(--sep);}
 .ev-detail-row:last-child{border-bottom:none;}
-.ev-detail-label{font-size:12px;color:var(--gray);width:52px;flex-shrink:0;padding-top:1px;}
-.ev-detail-value{font-size:14px;flex:1;}
-.ev-detail-link{font-size:14px;color:var(--blue);text-decoration:none;word-break:break-all;}
+.ev-detail-label{font-size:12.5px;color:var(--gray);width:44px;flex-shrink:0;padding-top:1px;font-weight:600;letter-spacing:0.1px;}
+.ev-detail-value{font-size:14.5px;flex:1;line-height:1.45;color:var(--text);}
+.ev-detail-link{font-size:14px;color:var(--blue);text-decoration:none;word-break:break-word;line-height:1.4;font-weight:500;}
+.ev-detail-tag{display:inline-flex;background:var(--blue-light);color:var(--blue);border-radius:20px;padding:3px 12px;font-size:12.5px;font-weight:600;}
 
-/* Trip name edit inline */
-.hero-name-input{font-size:24px;font-weight:700;letter-spacing:-0.5px;background:transparent;border:none;border-bottom:1.5px solid rgba(255,255,255,0.5);color:white;outline:none;width:100%;font-family:var(--font);}
-.hero-name-input::placeholder{color:rgba(255,255,255,0.4);}
+/* ── Hero name input ─────────────────────────────────── */
+.hero-name-input{font-size:23px;font-weight:700;letter-spacing:-0.4px;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.35);color:white;outline:none;width:100%;font-family:var(--font);}
+.hero-name-input::placeholder{color:rgba(255,255,255,0.35);}
 
-/* Tenki weather strip */
-.tenki-strip{margin:0 16px 6px;background:rgba(74,172,219,0.06);border:0.5px solid rgba(74,172,219,0.2);border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:6px;}
-.tenki-logo{font-size:11px;color:var(--blue);font-weight:600;opacity:0.7;white-space:nowrap;}
-.tenki-divider{width:1px;height:16px;background:var(--sep);}
-.tenki-info{flex:1;font-size:11px;color:var(--gray);}
-.tenki-refresh{font-size:11px;color:var(--blue);cursor:pointer;white-space:nowrap;}
+/* ── Notes ───────────────────────────────────────────── */
+.note-card{
+  background:var(--card);border-radius:var(--radius-lg);
+  margin:0 16px 10px;padding:16px 18px;
+  box-shadow:var(--shadow-sm);cursor:pointer;
+  border:0.5px solid var(--sep2);
+  transition:all var(--transition);
+}
+.note-card:active{background:var(--card2);transform:scale(0.99);}
+.note-title{font-size:15.5px;font-weight:600;margin-bottom:5px;color:var(--text);}
+.note-preview{font-size:13px;color:var(--gray);line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 
-@media(min-width:430px){body{box-shadow:0 0 40px rgba(0,0,0,0.1);}}
+/* ── Date / time input tweaks ────────────────────────── */
+input[type="date"],input[type="time"]{
+  color-scheme:light;
+  -webkit-appearance:none;
+  font-family:var(--font);
+}
+@media(prefers-color-scheme:dark){
+  input[type="date"],input[type="time"]{color-scheme:dark;}
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator{
+  opacity:0.5;cursor:pointer;filter:var(--icon-filter,none);
+}
+@media(prefers-color-scheme:dark){
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1);}
+}
+@media(min-width:430px){body{box-shadow:0 0 60px rgba(0,0,0,0.12);}}
 </style>
 </head>
 <body>
 
 <div class="status-bar">
-  <span class="time">9:41</span>
+  <span class="time" id="status-time">9:41</span>
   <div class="status-icons"><span>●●●●</span><span>WiFi</span><span>🔋</span></div>
 </div>
 <div class="nav-bar">
@@ -235,7 +525,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <div class="tab-content active" id="tab-itinerary">
   <!-- Hero Card -->
   <div class="hero-card" id="hero-card">
-    <div class="hero-plane">✈️</div>
     <div class="hero-name-row">
       <div class="hero-name" id="hero-name">🗼 東京</div>
       <div class="hero-edit-btn" onclick="startEditName()" title="編輯名稱">✏️</div>
@@ -247,7 +536,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="tenki-strip">
     <span class="tenki-logo">🌤 tenki.jp</span>
     <div class="tenki-divider"></div>
-    <div class="tenki-info">天氣資料來源：日本気象協会 tenki.jp（含降雨機率）</div>
+    <div class="tenki-info">天氣資料來源：日本気象協会 tenki.jp</div>
     <span class="tenki-refresh" onclick="refreshWeather()">更新</span>
   </div>
 
@@ -262,9 +551,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div class="sum-circle" id="sum-circle" style="--pct:60%"><div class="sum-inner" id="sum-pct">60%</div></div>
     <div><div class="sum-main" id="sum-main">準備中...</div><div class="sum-sub" id="sum-sub">已完成 0 / 0</div></div>
   </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 6px">
-    <div style="font-size:18px;font-weight:700">清單</div>
-    <div id="edit-btn" style="font-size:14px;color:var(--blue);cursor:pointer" onclick="toggleEdit()">編輯</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px">
+    <div style="font-size:17px;font-weight:700;color:var(--text)">清單</div>
+    <div id="edit-btn" style="font-size:13.5px;color:var(--blue);cursor:pointer;font-weight:600" onclick="toggleEdit()">編輯</div>
   </div>
   <div id="checklists-container"></div>
   <div style="height:16px"></div>
@@ -288,9 +577,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="bh-bar-item"><div class="bh-bar-lbl">其他</div><div class="bh-bar-track"><div class="bh-bar-fill" id="bar-oth" style="width:0%;background:#5E5CE6"></div></div><div class="bh-bar-amt" style="color:#5E5CE6" id="bar-oth-amt">NT$0</div></div>
     </div>
   </div>
-  <div style="margin:0 16px 10px;display:flex;align-items:center;justify-content:space-between;">
-    <div style="font-size:13px;color:var(--gray)">分帳成員：<span id="members-disp" style="color:var(--text);font-weight:500">Me</span></div>
-    <div style="font-size:13px;color:var(--blue);cursor:pointer" onclick="openMembersModal()">管理成員</div>
+  <div style="margin:0 16px 12px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:12.5px;color:var(--gray)">分帳成員：<span id="members-disp" style="color:var(--text);font-weight:600">Me</span></div>
+    <div style="font-size:13px;color:var(--blue);cursor:pointer;font-weight:600" onclick="openMembersModal()">管理成員</div>
   </div>
   <div class="seg-wrap">
     <div class="seg-btn active" onclick="filterExp('all',this)">全部</div>
@@ -303,14 +592,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div style="height:16px"></div>
 </div>
 
-<!-- ===== 地圖 ===== -->
-<div class="tab-content" id="tab-map">
-  <div style="margin:12px 16px;border-radius:20px;overflow:hidden;height:240px;background:linear-gradient(135deg,#e8f4ea,#d4e8d4);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--gray);">
-    <div style="font-size:42px">🗺️</div>
-    <div style="font-size:15px;font-weight:600">點擊地址開啟 Google Maps</div>
+<!-- ===== 筆記 ===== -->
+<div class="tab-content" id="tab-notes">
+  <div style="padding:14px 16px 8px;display:flex;align-items:center;justify-content:space-between">
+    <div style="font-size:17px;font-weight:700;color:var(--text)">旅遊筆記</div>
+    <div style="font-size:13.5px;color:var(--blue);cursor:pointer;font-weight:600" onclick="addNote()">＋ 新增</div>
   </div>
-  <div class="section-header">景點列表</div>
-  <div class="card" id="map-list"></div>
+  <div id="notes-container"></div>
   <div style="height:16px"></div>
 </div>
 
@@ -328,22 +616,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <svg class="tab-svg" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
     <div class="tab-label">花費</div>
   </div>
-  <div class="tab-item" id="tab-btn-map" onclick="switchTab('map')">
-    <svg class="tab-svg" viewBox="0 0 24 24"><polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-    <div class="tab-label">地圖</div>
+  <div class="tab-item" id="tab-btn-notes" onclick="switchTab('notes')">
+    <svg class="tab-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+    <div class="tab-label">筆記</div>
   </div>
 </div>
 
 <!-- ===== ADD/EDIT EVENT MODAL ===== -->
 <div class="modal-overlay" id="ev-modal" onclick="ovClick(event,'ev-modal')">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="ev-modal-title">新增行程</div>
-    <div style="display:flex;gap:8px;margin-bottom:11px">
+  <div class="modal-sheet"><div class="modal-body">
+    <div class="modal-hdr">
+      <div class="modal-title" id="ev-modal-title">新增行程</div>
+      <div class="modal-close" onclick="closeModal('ev-modal')">✕</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px">
       <div style="flex:0 0 auto">
         <div class="mf" style="margin-bottom:0">
           <label>類別</label>
-          <select class="m-select" id="ev-type" style="width:95px">
+          <select class="m-select" id="ev-type" style="width:100px">
             <option>景點</option><option>餐廳</option><option>交通</option>
             <option>購物</option><option>住宿</option><option>航班</option><option>其他</option>
           </select>
@@ -357,63 +647,64 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
     </div>
     <div class="mf">
-      <label>時間</label>
-      <input class="m-input" id="ev-time" type="time">
+      <label>日期 &amp; 時間</label>
+      <div style="display:flex;gap:8px">
+        <input class="m-input" id="ev-date" type="date" style="flex:1.4;min-width:0">
+        <input class="m-input" id="ev-time" type="time" style="flex:1;min-width:0">
+      </div>
     </div>
     <div class="mf">
       <label>地址（點選後開啟 Google Maps）</label>
       <input class="m-input" id="ev-address" type="text" placeholder="輸入地址或搜尋關鍵字">
     </div>
     <div class="mf">
-      <label>地圖連結</label>
-      <div class="radio-grp">
-        <label><input type="radio" name="ev-map" value="auto" checked> 自動地圖</label>
-        <label><input type="radio" name="ev-map" value="manual"> 手動地圖</label>
-        <label><input type="radio" name="ev-map" value="none"> 無</label>
-      </div>
-    </div>
-    <div class="mf">
       <label>備註</label>
-      <textarea class="m-input" id="ev-note" placeholder="備註..." style="min-height:52px;resize:none"></textarea>
+      <textarea class="m-input" id="ev-note" placeholder="備註..." style="min-height:56px;resize:none;line-height:1.5"></textarea>
     </div>
-    <button class="m-confirm" onclick="saveEvent()">儲存</button>
+    <button class="m-confirm" onclick="saveEvent()">儲存行程</button>
     <div class="m-cancel" onclick="closeModal('ev-modal')">取消</div>
-  </div>
+  </div></div>
 </div>
 
 <!-- ===== EVENT DETAIL MODAL ===== -->
 <div class="modal-overlay" id="ev-detail-modal" onclick="ovClick(event,'ev-detail-modal')">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
+  <div class="modal-sheet"><div class="modal-body">
+    <div class="modal-hdr" style="margin-bottom:4px">
+      <div class="modal-title" style="margin:0">行程詳情</div>
+      <div class="modal-close" onclick="closeModal('ev-detail-modal')">✕</div>
+    </div>
     <div id="ev-detail-content"></div>
     <div class="ev-detail-actions">
-      <button class="ev-detail-btn edit" onclick="editCurrentEvent()">✏️ 編輯</button>
-      <button class="ev-detail-btn delete" onclick="deleteCurrentEvent()">🗑 移除</button>
+      <button class="ev-detail-btn edit" onclick="editCurrentEvent()">編輯</button>
+      <button class="ev-detail-btn delete" onclick="deleteCurrentEvent()">移除</button>
     </div>
-    <div class="m-cancel" onclick="closeModal('ev-detail-modal')">關閉</div>
-  </div>
+  </div></div>
 </div>
 
 <!-- ===== TRIP NAME EDIT MODAL ===== -->
 <div class="modal-overlay" id="name-modal" onclick="ovClick(event,'name-modal')">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">編輯旅遊資訊</div>
+  <div class="modal-sheet"><div class="modal-body">
+    <div class="modal-hdr">
+      <div class="modal-title">編輯旅遊資訊</div>
+      <div class="modal-close" onclick="closeModal('name-modal')">✕</div>
+    </div>
     <div class="mf"><label>旅遊名稱</label><input class="m-input" id="trip-name-input" type="text" placeholder="例：東京 / 大阪 / 北海道"></div>
-    <div style="display:flex;gap:8px;margin-bottom:11px">
-      <div style="flex:1"><label style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.4px;font-weight:500;display:block;margin-bottom:4px">出發日期</label><input class="m-input" id="trip-start" type="date"></div>
-      <div style="flex:1"><label style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.4px;font-weight:500;display:block;margin-bottom:4px">返回日期</label><input class="m-input" id="trip-end" type="date"></div>
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <div style="flex:1"><label style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;display:block;margin-bottom:6px">出發日期</label><input class="m-input" id="trip-start" type="date"></div>
+      <div style="flex:1"><label style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;display:block;margin-bottom:6px">返回日期</label><input class="m-input" id="trip-end" type="date"></div>
     </div>
     <button class="m-confirm" onclick="saveTripInfo()">儲存</button>
     <div class="m-cancel" onclick="closeModal('name-modal')">取消</div>
-  </div>
+  </div></div>
 </div>
 
 <!-- ===== EXPENSE MODAL ===== -->
 <div class="modal-overlay" id="exp-modal" onclick="ovClick(event,'exp-modal')">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">新增消費</div>
+  <div class="modal-sheet"><div class="modal-body">
+    <div class="modal-hdr">
+      <div class="modal-title">新增消費</div>
+      <div class="modal-close" onclick="closeModal('exp-modal')">✕</div>
+    </div>
     <div class="mf"><label>名稱</label><input class="m-input" id="exp-name" type="text" placeholder="例：一蘭拉麵"></div>
     <div class="mf">
       <label>金額</label>
@@ -439,26 +730,47 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div class="mf"><label>備註</label><input class="m-input" id="exp-note" type="text" placeholder="例：Day 1 午餐"></div>
     <button class="m-confirm" onclick="addExpense()">確認新增</button>
     <div class="m-cancel" onclick="closeModal('exp-modal')">取消</div>
-  </div>
+  </div></div>
 </div>
 
 <!-- ===== MEMBERS MODAL ===== -->
 <div class="modal-overlay" id="mem-modal" onclick="ovClick(event,'mem-modal')">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="modal-title" style="margin:0">分帳成員</div>
-      <div style="font-size:22px;color:var(--gray);cursor:pointer;line-height:1" onclick="closeModal('mem-modal')">×</div>
+  <div class="modal-sheet"><div class="modal-body">
+    <div class="modal-hdr">
+      <div class="modal-title">分帳成員</div>
+      <div class="modal-close" onclick="closeModal('mem-modal')">✕</div>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px" id="mem-chips"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" id="mem-chips"></div>
     <div class="mem-add-row">
       <input class="mem-input" id="mem-input" placeholder="輸入名字按 Enter 新增" onkeydown="if(event.key==='Enter')addMember()">
       <button class="mem-add" onclick="addMember()">新增</button>
     </div>
-  </div>
+  </div></div>
 </div>
 
+<!-- ===== NOTE MODAL ===== -->
+<div class="modal-overlay" id="note-modal" onclick="ovClick(event,'note-modal')">
+  <div class="modal-sheet"><div class="modal-body">
+    <div class="modal-hdr">
+      <div class="modal-title" id="note-modal-title">新增筆記</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="note-delete-btn" style="display:none;font-size:13px;color:var(--red);cursor:pointer;font-weight:600;padding:4px 8px;background:var(--red-light);border-radius:8px" onclick="deleteNote()">刪除</div>
+        <div class="modal-close" onclick="closeModal('note-modal')">✕</div>
+      </div>
+    </div>
+    <div class="mf"><label>標題</label><input class="m-input" id="note-title-input" type="text" placeholder="筆記標題"></div>
+    <div class="mf">
+      <label>內容</label>
+      <textarea class="m-input" id="note-content-input" placeholder="輸入筆記內容..." style="min-height:160px;resize:none;line-height:1.6"></textarea>
+    </div>
+    <button class="m-confirm" onclick="saveNote()">儲存筆記</button>
+    <div class="m-cancel" onclick="closeModal('note-modal')">取消</div>
+  </div></div>
+</div>
 <script>
+// ===== UTILS =====
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
 // ===== TRIP INFO =====
 let tripInfo = {
   name: '🗼 東京',
@@ -474,8 +786,8 @@ function formatHeroDate(s,e){
   const sd=new Date(s), ed=new Date(e);
   const fmtDay=d=>`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
   const nights=calcNights(s,e);
-  const days=nights+1;
-  return `${fmtDay(sd)} – ${fmtDay(ed)}・${days}天${nights}夜`;
+  const totalDays=nights+1;  // Bug #2 fix: was `const days=...` which shadowed global days array
+  return `${fmtDay(sd)} – ${fmtDay(ed)}・${totalDays}天${nights}夜`;
 }
 function updateHeroCard(){
   document.getElementById('hero-name').textContent=tripInfo.name;
@@ -495,6 +807,8 @@ function saveTripInfo(){
   if(start) tripInfo.startDate=start;
   if(end) tripInfo.endDate=end;
   updateHeroCard();
+  // Bug #12 fix: also refresh subtitle when trip info changes
+  document.getElementById('nav-subtitle').textContent=tripInfo.name+' · 行程規劃';
   closeModal('name-modal');
 }
 
@@ -620,19 +934,21 @@ const mapSpots=[
 
 // ===== TAB =====
 function switchTab(t){
-  ['itinerary','prepare','account','map'].forEach(x=>{
+  ['itinerary','prepare','account','notes'].forEach(x=>{
     document.getElementById('tab-'+x).classList.remove('active');
     document.getElementById('tab-btn-'+x).classList.remove('active');
   });
   document.getElementById('tab-'+t).classList.add('active');
   document.getElementById('tab-btn-'+t).classList.add('active');
-  const titles={itinerary:'我的旅程',prepare:'準備清單',account:'旅遊記帳',map:'景點地圖'};
-  const subs={itinerary:'日本東京 · 4月旅行',prepare:'出發前確認事項',account:'花費總覽',map:'東京景點地圖'};
+  const titles={itinerary:'我的旅程',prepare:'準備清單',account:'旅遊記帳',notes:'旅遊筆記'};
+  // Bug #12 fix: itinerary subtitle should reflect actual trip name, not hardcoded string
+  const subs={itinerary:tripInfo.name+' · 行程規劃',prepare:'出發前確認事項',account:'花費總覽',notes:'備忘錄'};
   document.getElementById('nav-title').textContent=titles[t];
   document.getElementById('nav-subtitle').textContent=subs[t];
   if(t==='account')renderExpenses();
   if(t==='prepare')renderChecklists();
-  if(t==='map')renderMapSpots();
+  if(t==='notes')renderNotes();
+  if(t==='itinerary')renderItinerary(); // Bug #8 fix: itinerary was never re-rendered on tab switch
 }
 
 // ===== ITINERARY =====
@@ -643,11 +959,12 @@ function renderItinerary(){
   const c=document.getElementById('itinerary-container');
   c.innerHTML=days.map((d,di)=>{
     const w=weatherData[d.date];
+    // Bug #13 fix: when no weather data, insert flex spacer so + button stays right-aligned
     const weatherHtml=w?`
       <div class="day-weather">
         <div class="day-weather-main">${w.icon} ${w.min}°-${w.max}°</div>
         <div class="day-weather-rain" style="color:${rainColor(w.rain)}">☔ ${w.rain}%</div>
-      </div>`:'';
+      </div>`:'<div style="margin-left:auto"></div>';
     const evHtml=d.events.map((ev,ei)=>{
       const addrHtml=ev.addr?`<a class="tc-addr" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.addr)}" target="_blank" onclick="event.stopPropagation()">📍 ${ev.addr.split(' ')[0]}</a>`:'';
       const tagColor={景點:'tag-blue',餐廳:'tag-orange',交通:'tag-blue',購物:'tag-orange',住宿:'tag-blue',航班:'tag-blue',其他:'tag-green'}[ev.type]||'tag-blue';
@@ -681,17 +998,32 @@ function renderItinerary(){
 function viewEvent(di,ei){
   viewEvDayIdx=di; viewEvIdx=ei;
   const ev=days[di].events[ei];
-  const mapLink=ev.addr?`<a class="ev-detail-link" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.addr)}" target="_blank">📍 ${ev.addr}</a>`:'—';
+  const mapLink=ev.addr
+    ?`<a class="ev-detail-link" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.addr)}" target="_blank">📍 ${ev.addr}</a>`
+    :'<span style="color:var(--gray2)">未設定</span>';
+  // Format date display
+  let dateDisplay='<span style="color:var(--gray2)">未設定</span>';
+  if(ev.date){
+    const d=new Date(ev.date+'T00:00:00');
+    dateDisplay=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+  }
+  const timeDisplay=ev.time&&ev.time!=='--:--'
+    ?ev.time
+    :'<span style="color:var(--gray2)">未設定</span>';
   document.getElementById('ev-detail-content').innerHTML=`
-    <div style="font-size:18px;font-weight:700;margin-bottom:14px">${typeEmoji(ev.type)} ${ev.title}</div>
-    <div style="background:var(--gray6);border-radius:12px;padding:4px 12px;margin-bottom:4px">
+    <div style="font-size:20px;font-weight:700;margin-bottom:16px;padding-right:4px;line-height:1.3">${typeEmoji(ev.type)} ${escHtml(ev.title)}</div>
+    <div class="ev-detail-body">
       <div class="ev-detail-row">
         <div class="ev-detail-label">類別</div>
-        <div class="ev-detail-value"><span style="background:rgba(74,172,219,0.12);color:var(--blue);padding:2px 10px;border-radius:20px;font-size:13px;font-weight:500">${ev.type}</span></div>
+        <div class="ev-detail-value"><span class="ev-detail-tag">${escHtml(ev.type)}</span></div>
+      </div>
+      <div class="ev-detail-row">
+        <div class="ev-detail-label">日期</div>
+        <div class="ev-detail-value">${dateDisplay}</div>
       </div>
       <div class="ev-detail-row">
         <div class="ev-detail-label">時間</div>
-        <div class="ev-detail-value">${ev.time||'未設定'}</div>
+        <div class="ev-detail-value">${timeDisplay}</div>
       </div>
       <div class="ev-detail-row">
         <div class="ev-detail-label">地址</div>
@@ -699,32 +1031,51 @@ function viewEvent(di,ei){
       </div>
       <div class="ev-detail-row">
         <div class="ev-detail-label">備註</div>
-        <div class="ev-detail-value" style="color:var(--gray)">${ev.note||'—'}</div>
+        <div class="ev-detail-value" style="${ev.note?'':'color:var(--gray2)'}">${ev.note?escHtml(ev.note):'無'}</div>
       </div>
     </div>`;
   openModal('ev-detail-modal');
 }
+
+let editEvIdx = 0; // Bug #9 fix: separate variable for edit index, captured at edit-open time
 
 function editCurrentEvent(){
   closeModal('ev-detail-modal');
   const ev=days[viewEvDayIdx].events[viewEvIdx];
   isEditingEvent=true;
   addEvDayIdx=viewEvDayIdx;
+  editEvIdx=viewEvIdx; // Bug #9 fix: capture index at the time edit is initiated
   document.getElementById('ev-modal-title').textContent=`編輯事項`;
   document.getElementById('ev-type').value=ev.type;
   document.getElementById('ev-title').value=ev.title;
   document.getElementById('ev-time').value=ev.time==='--:--'?'':ev.time;
+  // Populate date field — use stored ev.date if available, else derive from tripInfo
+  if(ev.date){
+    document.getElementById('ev-date').value=ev.date;
+  } else {
+    const d=new Date(tripInfo.startDate);
+    d.setDate(d.getDate()+viewEvDayIdx);
+    document.getElementById('ev-date').value=d.toISOString().slice(0,10);
+  }
   document.getElementById('ev-address').value=ev.addr||'';
   document.getElementById('ev-note').value=ev.note||'';
-  document.querySelector('input[name="ev-map"][value="auto"]').checked=true;
   openModal('ev-modal');
 }
 
 function deleteCurrentEvent(){
-  if(confirm(`確認移除「${days[viewEvDayIdx].events[viewEvIdx].title}」？`)){
+  // Bug fix: replace confirm() (blocked on some iOS WebViews) with inline confirm UI
+  const btn=document.querySelector('.ev-detail-btn.delete');
+  if(btn.dataset.confirming==='1'){
     days[viewEvDayIdx].events.splice(viewEvIdx,1);
     closeModal('ev-detail-modal');
     renderItinerary();
+  } else {
+    btn.dataset.confirming='1';
+    btn.textContent='確認移除？';
+    btn.style.background='rgba(255,59,48,0.22)';
+    setTimeout(()=>{
+      if(btn){btn.dataset.confirming='';btn.textContent='移除';btn.style.background='';}
+    },2500);
   }
 }
 
@@ -735,7 +1086,10 @@ function openEvModal(dayIdx){
   document.getElementById('ev-time').value='';
   document.getElementById('ev-type').value='景點';
   document.getElementById('ev-title').style.outline='';
-  document.querySelector('input[name="ev-map"][value="auto"]').checked=true;
+  // Pre-fill date from day's date string (e.g. "4月10日" → derive from tripInfo.startDate + day offset)
+  const d=new Date(tripInfo.startDate);
+  d.setDate(d.getDate()+(dayIdx));
+  document.getElementById('ev-date').value=d.toISOString().slice(0,10);
   openModal('ev-modal');
 }
 
@@ -743,8 +1097,11 @@ function saveEvent(){
   const title=document.getElementById('ev-title').value.trim();
   if(!title){document.getElementById('ev-title').style.outline='2px solid var(--red)';return;}
   document.getElementById('ev-title').style.outline='';
+  const evDate=document.getElementById('ev-date').value; // e.g. "2025-04-10"
+  const evTime=document.getElementById('ev-time').value||'--:--';
   const ev={
-    time:document.getElementById('ev-time').value||'--:--',
+    time:evTime,
+    date:evDate,
     type:document.getElementById('ev-type').value,
     title,
     addr:document.getElementById('ev-address').value.trim(),
@@ -752,7 +1109,7 @@ function saveEvent(){
     tags:[document.getElementById('ev-type').value],
   };
   if(isEditingEvent){
-    days[addEvDayIdx].events[viewEvIdx]=ev;
+    days[addEvDayIdx].events[editEvIdx]=ev; // Bug #9 fix: use editEvIdx (captured at edit-open), not viewEvIdx
   } else {
     days[addEvDayIdx].events.push(ev);
     days[addEvDayIdx].events.sort((a,b)=>(a.time==='--:--'?'99:99':a.time).localeCompare(b.time==='--:--'?'99:99':b.time));
@@ -777,6 +1134,7 @@ function renderChecklists(){
     const collapsed=collapsedSec.has(cat.id);
     const div=document.createElement('div');
     div.className='cl-cat'+(editMode?' edit-mode':'');
+    div.dataset.catId=cat.id; // Bug #10 fix: set data attribute for reliable lookup
     const itemsHtml=collapsed?'':cat.items.map(item=>`
       <div class="cl-item" onclick="toggleItem('${cat.id}',${item.id})">
         <div class="chk ${item.checked?'on':''}"></div>
@@ -798,8 +1156,9 @@ function toggleItem(cid,iid){checklistData.find(c=>c.id===cid).items.find(i=>i.i
 function delItem(e,cid,iid){e.stopPropagation();checklistData.find(c=>c.id===cid).items=checklistData.find(c=>c.id===cid).items.filter(i=>i.id!==iid);renderChecklists();}
 function toggleEdit(){editMode=!editMode;document.getElementById('edit-btn').textContent=editMode?'完成':'編輯';renderChecklists();}
 function showAddInput(cid){
-  const idx=checklistData.findIndex(c=>c.id===cid);
-  const catEl=document.querySelectorAll('.cl-cat')[idx];
+  // Bug #10 fix: find by data attribute instead of fragile querySelectorAll index (breaks when sections collapsed)
+  const catEl=document.querySelector(`.cl-cat[data-cat-id="${cid}"]`);
+  if(!catEl)return;
   const addRow=catEl.querySelector('.cl-add');
   if(!addRow)return;
   const row=document.createElement('div');
@@ -835,11 +1194,14 @@ function renderExpenses(){
   const filtered=expFilter==='all'?expenses:expenses.filter(e=>e.cat===expFilter);
   if(!filtered.length){list.innerHTML='<div style="padding:24px;text-align:center;color:var(--gray);font-size:14px">尚無記錄</div>';return;}
   list.innerHTML=filtered.map(e=>{
+    // Bug fix: escape user-entered name and note before injecting into innerHTML
+    const safeName=escHtml(e.name);
+    const safeNote=escHtml(e.note);
     const dispAmt=e.currency==='JPY'?`¥${e.amount.toLocaleString()} (NT$${toNTD(e).toLocaleString()})`:`NT$${e.amount.toLocaleString()}`;
-    const splitTxt=e.splits&&e.splits.length>1?`分帳: ${e.splits.join(', ')}`:e.splits&&e.splits.length===1&&e.splits[0]!=='Me'?`付款: ${e.splits[0]}`:'';
+    const splitTxt=e.splits&&e.splits.length>1?`分帳: ${e.splits.map(escHtml).join(', ')}`:e.splits&&e.splits.length===1&&e.splits[0]!=='Me'?`付款: ${escHtml(e.splits[0])}`:'';
     return `<div class="exp-item">
       <div class="exp-ico ${catColors[e.cat]}">${catIcons[e.cat]}</div>
-      <div class="exp-content"><div class="exp-name">${e.name}</div><div class="exp-meta">${catNames[e.cat]}${e.note?' · '+e.note:''}</div></div>
+      <div class="exp-content"><div class="exp-name">${safeName}</div><div class="exp-meta">${catNames[e.cat]}${safeNote?' · '+safeNote:''}</div></div>
       <div class="exp-right"><div class="exp-amt">-${dispAmt}</div>${splitTxt?`<div class="exp-split">${splitTxt}</div>`:''}</div>
     </div>`;
   }).join('');
@@ -853,19 +1215,27 @@ function openExpModal(){
   document.getElementById('exp-name').style.outline='';
   document.querySelectorAll('.m-cat').forEach(c=>c.classList.remove('on'));
   document.querySelector('.m-cat[data-cat="food"]').classList.add('on');
+  // Bug #4 fix: reset both currency buttons, not just cur-jpy
   document.getElementById('cur-ntd').classList.add('on');
   document.getElementById('cur-jpy').classList.remove('on');
   renderSplitChips();openModal('exp-modal');
 }
 function renderSplitChips(){
-  document.getElementById('split-chips').innerHTML=members.map(m=>`<div class="m-chip ${selSplits.includes(m)?'on':''}" onclick="toggleSplit('${m}')">${m}</div>`).join('');
+  // Same XSS fix as renderMemChips: escape member names
+  document.getElementById('split-chips').innerHTML=members.map(m=>`<div class="m-chip ${selSplits.includes(m)?'on':''}" onclick="toggleSplit('${escHtml(m)}')">${escHtml(m)}</div>`).join('');
 }
 function toggleSplit(m){selSplits.includes(m)?selSplits=selSplits.filter(x=>x!==m):selSplits.push(m);renderSplitChips();}
-function setCur(c){selCurrency=c;document.getElementById('cur-ntd').classList.toggle('on',c==='NTD');document.getElementById('cur-jpy').classList.toggle('on',c==='JPY');}
+function setCur(c){
+  selCurrency=c;
+  // Bug #3 fix: clear ALL currency buttons before setting active
+  ['cur-ntd','cur-jpy'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById('cur-ntd').classList.toggle('on',c==='NTD');
+  document.getElementById('cur-jpy').classList.toggle('on',c==='JPY');
+}
 function selCat(el){document.querySelectorAll('.m-cat').forEach(c=>c.classList.remove('on'));el.classList.add('on');selExpCat=el.dataset.cat;}
 function addExpense(){
   const name=document.getElementById('exp-name').value.trim();
-  const amount=parseInt(document.getElementById('exp-amount').value)||0;
+  const amount=parseFloat(document.getElementById('exp-amount').value)||0; // Bug #5 fix: parseFloat handles decimals
   const note=document.getElementById('exp-note').value.trim();
   if(!name||!amount){document.getElementById('exp-name').style.outline='2px solid var(--red)';return;}
   expenses.unshift({id:Date.now(),name,amount,currency:selCurrency,cat:selExpCat,note,splits:[...selSplits]});
@@ -874,33 +1244,112 @@ function addExpense(){
 
 // ===== MEMBERS =====
 function openMembersModal(){renderMemChips();document.getElementById('mem-input').value='';openModal('mem-modal');}
+
 function renderMemChips(){
-  document.getElementById('mem-chips').innerHTML=members.map(m=>`<div class="mem-chip ${m==='Me'?'me':''}">${m}${m!=='Me'?`<span class="rm" onclick="removeMember('${m}')">×</span>`:''}</div>`).join('');
+  // Bug #6 fix: escape member names used in onclick to prevent XSS / broken JS
+  document.getElementById('mem-chips').innerHTML=members.map(m=>`<div class="mem-chip ${m==='Me'?'me':''}">${escHtml(m)}${m!=='Me'?`<span class="rm" onclick="removeMember('${escHtml(m)}')">×</span>`:''}</div>`).join('');
 }
-function addMember(){const inp=document.getElementById('mem-input');const name=inp.value.trim();if(!name||members.includes(name)){inp.value='';return;}members.push(name);inp.value='';renderMemChips();renderExpenses();}
+function addMember(){
+  const inp=document.getElementById('mem-input');
+  const name=inp.value.trim();
+  // Bug fix: case-insensitive duplicate check to prevent "me" and "Me" coexisting
+  if(!name||members.some(m=>m.toLowerCase()===name.toLowerCase())){inp.value='';return;}
+  members.push(name);inp.value='';renderMemChips();renderExpenses();
+}
 function removeMember(name){members=members.filter(m=>m!==name);renderMemChips();renderExpenses();}
 
-// ===== MAP =====
-function renderMapSpots(){
-  document.getElementById('map-list').innerHTML=mapSpots.map(s=>`
-    <div class="card-row" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.addr)}','_blank')" style="cursor:pointer">
-      <div style="font-size:22px;width:32px;text-align:center">${s.icon}</div>
-      <div style="flex:1"><div style="font-size:15px">${s.name}</div><div style="font-size:12px;color:var(--blue);margin-top:1px">${s.addr}</div></div>
-      <div style="color:var(--gray2);font-size:18px">›</div>
+// ===== NOTES =====
+let notes = [
+  {id:1, title:'東京必買清單', content:'藥妝：Hada Labo / 白兔面膜\n零食：一蘭速食包 / ROYCE生巧克力\n電器：Bic Camera / Yodobashi'},
+  {id:2, title:'交通提醒', content:'Suica 記得充值 ¥5000 以上\n羽田↔市區 京急電鐵 約35分\n都內移動可用 Google Maps 查 JR/Metro'},
+];
+let nextNoteId = 10;
+let editingNoteId = null;
+
+function renderNotes(){
+  const c = document.getElementById('notes-container');
+  if(!notes.length){
+    c.innerHTML='<div style="padding:40px 16px;text-align:center;color:var(--gray2);font-size:15px">點擊右上角＋新增筆記</div>';
+    return;
+  }
+  // Bug #7 fix: escape title and content before injecting into innerHTML
+  c.innerHTML = notes.map(n=>`
+    <div class="note-card" onclick="openNoteModal(${n.id})">
+      <div class="note-title">${escHtml(n.title||'無標題')}</div>
+      <div class="note-preview">${escHtml((n.content||'').replace(/\n/g,' '))}</div>
     </div>`).join('');
 }
 
-// ===== MODAL =====
+function addNote(){
+  editingNoteId = null;
+  document.getElementById('note-title-input').value = '';
+  document.getElementById('note-content-input').value = '';
+  document.getElementById('note-modal-title').textContent = '新增筆記';
+  document.getElementById('note-delete-btn').style.display = 'none';
+  openModal('note-modal');
+  setTimeout(()=>document.getElementById('note-title-input').focus(),300);
+}
+
+function openNoteModal(id){
+  const note = notes.find(n=>n.id===id);
+  if(!note) return;
+  editingNoteId = id;
+  document.getElementById('note-title-input').value = note.title;
+  document.getElementById('note-content-input').value = note.content;
+  document.getElementById('note-modal-title').textContent = '編輯筆記';
+  document.getElementById('note-delete-btn').style.display = 'block';
+  openModal('note-modal');
+}
+
+function saveNote(){
+  const title = document.getElementById('note-title-input').value.trim();
+  const content = document.getElementById('note-content-input').value.trim();
+  if(!title && !content) { closeModal('note-modal'); return; }
+  if(editingNoteId){
+    const note = notes.find(n=>n.id===editingNoteId);
+    note.title = title; note.content = content;
+  } else {
+    notes.unshift({id:nextNoteId++, title, content});
+  }
+  closeModal('note-modal');
+  renderNotes();
+}
+
+function deleteNote(){
+  if(!editingNoteId) return;
+  notes = notes.filter(n=>n.id!==editingNoteId);
+  closeModal('note-modal');
+  renderNotes();
+}
+
 function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  // Reset delete confirm state when detail modal closes
+  if(id==='ev-detail-modal'){
+    const btn=document.querySelector('.ev-detail-btn.delete');
+    if(btn){btn.dataset.confirming='';btn.textContent='移除';btn.style.background='';}
+  }
+}
 function ovClick(e,id){if(e.target.id===id)closeModal(id);}
 
 // ===== INIT =====
+// Bug #11 fix: real-time clock instead of hardcoded "9:41"
+function updateClock(){
+  const now=new Date();
+  const h=now.getHours().toString().padStart(2,'0');
+  const m=now.getMinutes().toString().padStart(2,'0');
+  const el=document.getElementById('status-time');
+  if(el) el.textContent=`${h}:${m}`;
+}
+updateClock();
+setInterval(updateClock,10000);
+
 updateHeroCard();
 renderItinerary();
 renderChecklists();
 renderExpenses();
-renderMapSpots();
+renderNotes();
 </script>
 </body>
 </html>
