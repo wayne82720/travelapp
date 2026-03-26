@@ -105,13 +105,13 @@ body{
 /* The floating pill itself */
 .tab-pill{
   display:flex;align-items:center;
-  background:rgba(22,22,26,0.88);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  background:rgba(30,32,38,0.72);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border-radius:40px;
   padding:6px 8px;
   gap:2px;
-  box-shadow:0 4px 24px rgba(0,0,0,0.28),0 1px 6px rgba(0,0,0,0.18);
-  border:0.5px solid rgba(255,255,255,0.08);
+  box-shadow:0 4px 20px rgba(0,0,0,0.16),0 1px 4px rgba(0,0,0,0.1);
+  border:0.5px solid rgba(255,255,255,0.1);
   pointer-events:all;
 }
 .tab-item{
@@ -142,14 +142,17 @@ body{
 /* ── Hero card ──────────────────────────────────────── */
 .hero-card{
   margin:14px 16px 10px;border-radius:var(--radius-xl);
-  background:linear-gradient(145deg,#0d1117 0%,#161d2e 45%,#0e2040 100%);
-  color:white;padding:20px 22px 18px;box-shadow:var(--shadow-lg);
+  background:linear-gradient(145deg,rgba(30,40,65,0.82) 0%,rgba(20,30,55,0.88) 100%);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  color:white;padding:20px 22px 18px;
+  box-shadow:0 4px 20px rgba(15,30,60,0.18),0 1px 4px rgba(0,0,0,0.1);
   position:relative;overflow:hidden;
+  border:0.5px solid rgba(255,255,255,0.1);
 }
 .hero-card::before{
   content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 80% 20%,rgba(59,158,204,0.18) 0%,transparent 60%),
-             radial-gradient(ellipse at 20% 80%,rgba(93,93,200,0.12) 0%,transparent 55%);
+  background:radial-gradient(ellipse at 80% 20%,rgba(59,158,204,0.14) 0%,transparent 60%),
+             radial-gradient(ellipse at 20% 80%,rgba(93,93,200,0.08) 0%,transparent 55%);
   pointer-events:none;
 }
 .hero-name-row{display:flex;align-items:center;gap:8px;position:relative;}
@@ -214,6 +217,14 @@ body{
   width:9px;height:9px;border-radius:50%;background:var(--blue);
   margin:5px 0;flex-shrink:0;box-shadow:0 0 0 2px var(--blue-glow);
 }
+.tl-dot.dot-food{background:var(--orange);box-shadow:0 0 0 2px var(--orange-light);}
+.tl-dot.dot-transport{background:var(--blue);box-shadow:0 0 0 2px var(--blue-glow);}
+.tl-dot.dot-hotel{background:var(--purple);box-shadow:0 0 0 2px var(--purple-light);}
+.tl-dot.dot-shop{background:var(--red);box-shadow:0 0 0 2px var(--red-light);}
+.tl-dot.dot-activity{background:var(--green);box-shadow:0 0 0 2px var(--green-light);}
+.tl-dot.dot-flight{background:var(--blue);box-shadow:0 0 0 2px var(--blue-glow);}
+.tl-dot.dot-other{background:var(--gray);box-shadow:0 0 0 2px rgba(142,142,147,0.2);}
+/* legacy */
 .tl-dot.green{background:var(--green);box-shadow:0 0 0 2px var(--green-light);}
 .tl-dot.orange{background:var(--orange);box-shadow:0 0 0 2px var(--orange-light);}
 .tl-dot.purple{background:var(--purple);box-shadow:0 0 0 2px var(--purple-light);}
@@ -225,7 +236,8 @@ body{
   transition:all var(--transition);border:0.5px solid var(--sep2);
 }
 .tl-card:active{background:var(--card2);transform:scale(0.99);}
-.tc-title{font-size:14.5px;font-weight:600;padding-right:20px;color:var(--text);}
+.tc-title{font-size:14.5px;font-weight:600;padding-right:20px;color:var(--text);display:flex;align-items:center;gap:7px;}
+.tc-icon{display:inline-flex;align-items:center;flex-shrink:0;color:var(--blue);opacity:0.85;}
 .tc-sub{font-size:12px;color:var(--gray);margin-top:2px;line-height:1.4;}
 .tc-addr{
   font-size:11px;color:var(--blue);text-decoration:none;
@@ -236,7 +248,16 @@ body{
   position:absolute;top:50%;right:11px;transform:translateY(-50%);
   color:var(--gray3);font-size:15px;font-weight:300;
 }
-.tag{font-size:10.5px;padding:2px 9px;border-radius:20px;font-weight:600;letter-spacing:0.1px;}
+.tag{font-size:10.5px;padding:3px 10px;border-radius:20px;font-weight:700;letter-spacing:0.1px;}
+/* Matched to expense category palette */
+.tag-transport{background:var(--blue-light);color:var(--blue);}
+.tag-food{background:var(--orange-light);color:var(--orange);}
+.tag-hotel{background:var(--purple-light);color:var(--purple);}
+.tag-shop{background:var(--red-light);color:var(--red);}
+.tag-activity{background:var(--green-light);color:var(--green);}
+.tag-flight{background:rgba(59,158,204,0.18);color:var(--blue);}
+.tag-other{background:var(--gray5);color:var(--gray);}
+/* legacy fallbacks */
 .tag-blue{background:var(--blue-light);color:var(--blue);}
 .tag-green{background:var(--green-light);color:var(--green);}
 .tag-orange{background:var(--orange-light);color:var(--orange);}
@@ -325,12 +346,16 @@ body{
 .add-exp-btn:active{opacity:0.82;transform:scale(0.97);}
 .budget-hero{
   margin:0 16px 12px;border-radius:var(--radius-xl);
-  background:linear-gradient(145deg,#111116 0%,#1A1A22 50%,#141420 100%);
-  color:white;padding:20px;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;
+  background:linear-gradient(145deg,rgba(30,40,65,0.82) 0%,rgba(20,30,55,0.88) 100%);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  color:white;padding:20px;
+  box-shadow:0 4px 20px rgba(15,30,60,0.14),0 1px 4px rgba(0,0,0,0.08);
+  position:relative;overflow:hidden;
+  border:0.5px solid rgba(255,255,255,0.1);
 }
 .budget-hero::before{
   content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 90% 10%,rgba(93,184,232,0.12) 0%,transparent 55%);
+  background:radial-gradient(ellipse at 90% 10%,rgba(59,158,204,0.1) 0%,transparent 55%);
   pointer-events:none;
 }
 .bh-label{font-size:11.5px;opacity:0.55;letter-spacing:0.3px;font-weight:500;}
@@ -339,7 +364,7 @@ body{
 .bh-bars{display:flex;gap:10px;margin-top:14px;}
 .bh-bar-item{flex:1;}
 .bh-bar-lbl{font-size:10px;opacity:0.55;margin-bottom:5px;font-weight:500;letter-spacing:0.2px;}
-.bh-bar-track{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;}
+.bh-bar-track{height:3px;background:rgba(255,255,255,0.15);border-radius:2px;}
 .bh-bar-fill{height:100%;border-radius:2px;transition:width 0.5s cubic-bezier(0.4,0,0.2,1);}
 .bh-bar-amt{font-size:11.5px;font-weight:600;margin-top:4px;}
 .seg-wrap{
@@ -669,7 +694,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
           <label>類別</label>
           <select class="m-select" id="ev-type" style="width:100px">
             <option>景點</option><option>餐廳</option><option>交通</option>
-            <option>購物</option><option>住宿</option><option>航班</option><option>其他</option>
+            <option>購物</option><option>住宿</option><option>其他</option>
           </select>
         </div>
       </div>
@@ -694,6 +719,16 @@ input[type="time"]::-webkit-calendar-picker-indicator{
     <div class="mf">
       <label>備註</label>
       <textarea class="m-input" id="ev-note" placeholder="備註..." style="min-height:56px;resize:none;line-height:1.5"></textarea>
+    </div>
+    <div class="mf">
+      <label>費用（選填，自動同步到花費記錄）</label>
+      <div style="display:flex;gap:8px">
+        <input class="m-input" id="ev-amount" type="number" placeholder="0" inputmode="numeric" style="flex:1">
+        <div class="cur-toggle" style="flex-shrink:0">
+          <div class="cur-btn on" id="ev-cur-ntd" onclick="setEvCur('NTD')">NT$</div>
+          <div class="cur-btn" id="ev-cur-jpy" onclick="setEvCur('JPY')">¥</div>
+        </div>
+      </div>
     </div>
     <button class="m-confirm" onclick="saveEvent()">儲存行程</button>
     <div class="m-cancel" onclick="closeModal('ev-modal')">取消</div>
@@ -986,8 +1021,21 @@ function switchTab(t){
 }
 
 // ===== ITINERARY =====
-function typeEmoji(t){return{景點:'📍',餐廳:'🍽',交通:'🚃',購物:'🛍',住宿:'🏨',航班:'✈️',其他:'📌'}[t]||'📌';}
-function dotClass(t){return{餐廳:'orange',住宿:'purple',交通:'green'}[t]||'';}
+// SVG outline icons — monochrome, stroke-only, no fill
+const TYPE_ICONS={
+  '景點':`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88 16.24,7.76"/></svg>`,
+  '餐廳':`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
+  '交通':`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16,8 20,8 23,11 23,16 16,16 16,8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+  '購物':`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>`,
+  '住宿':`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>`,
+  '航班':`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27,6.96 12,12.01 20.73,6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+  '其他':`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+};
+function typeEmoji(t){return TYPE_ICONS[t]||TYPE_ICONS['交通']||TYPE_ICONS['其他'];}
+function dotClass(t){
+  return{景點:'dot-activity',餐廳:'dot-food',交通:'dot-transport',航班:'dot-transport',
+         購物:'dot-shop',住宿:'dot-hotel',其他:'dot-other'}[t]||'dot-other';
+}
 
 function renderItinerary(){
   const c=document.getElementById('itinerary-container');
@@ -1001,8 +1049,12 @@ function renderItinerary(){
       </div>`:'<div style="margin-left:auto"></div>';
     const evHtml=d.events.map((ev,ei)=>{
       const addrHtml=ev.addr?`<a class="tc-addr" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.addr)}" target="_blank" onclick="event.stopPropagation()">📍 ${ev.addr.split(' ')[0]}</a>`:'';
-      const tagColor={景點:'tag-blue',餐廳:'tag-orange',交通:'tag-blue',購物:'tag-orange',住宿:'tag-blue',航班:'tag-blue',其他:'tag-green'}[ev.type]||'tag-blue';
-      const tagsHtml=ev.tags.map(t=>`<span class="tag ${tagColor}">${t}</span>`).join('');
+      // Only show category tag — matched to expense colour system
+      const typeTagClass={
+        '景點':'tag-activity','餐廳':'tag-food','交通':'tag-transport',
+        '購物':'tag-shop','住宿':'tag-hotel','航班':'tag-transport','其他':'tag-other'
+      }[ev.type]||'tag-other';
+      const tagsHtml=`<span class="tag ${typeTagClass}">${ev.type}</span>`;
       return `<div class="timeline-item">
         <div class="timeline-left">
           <div class="tl-time">${ev.time}</div>
@@ -1010,7 +1062,7 @@ function renderItinerary(){
           <div class="tl-line"></div>
         </div>
         <div class="tl-card" onclick="viewEvent(${di},${ei})">
-          <div class="tc-title">${typeEmoji(ev.type)} ${ev.title}</div>
+          <div class="tc-title"><span class="tc-icon">${typeEmoji(ev.type)}</span>${escHtml(ev.title)}</div>
           ${ev.note?`<div class="tc-sub">${ev.note}</div>`:''}
           ${addrHtml}
           <div class="tc-tags">${tagsHtml}</div>
@@ -1044,8 +1096,14 @@ function viewEvent(di,ei){
   const timeDisplay=ev.time&&ev.time!=='--:--'
     ?ev.time
     :'<span style="color:var(--gray2)">未設定</span>';
+  const amountDisplay=ev.amount>0
+    ?(ev.amountCurrency==='JPY'?`¥${ev.amount.toLocaleString()} (NT$${Math.round(ev.amount*JPY_RATE).toLocaleString()})`:`NT$${ev.amount.toLocaleString()}`)
+    :'<span style="color:var(--gray2)">未記錄</span>';
   document.getElementById('ev-detail-content').innerHTML=`
-    <div style="font-size:20px;font-weight:700;margin-bottom:16px;padding-right:4px;line-height:1.3">${typeEmoji(ev.type)} ${escHtml(ev.title)}</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-right:4px">
+      <span style="flex-shrink:0;color:var(--blue)">${typeEmoji(ev.type)}</span>
+      <span style="font-size:19px;font-weight:700;line-height:1.3;color:var(--text)">${escHtml(ev.title)}</span>
+    </div>
     <div class="ev-detail-body">
       <div class="ev-detail-row">
         <div class="ev-detail-label">類別</div>
@@ -1067,23 +1125,33 @@ function viewEvent(di,ei){
         <div class="ev-detail-label">備註</div>
         <div class="ev-detail-value" style="${ev.note?'':'color:var(--gray2)'}">${ev.note?escHtml(ev.note):'無'}</div>
       </div>
+      <div class="ev-detail-row">
+        <div class="ev-detail-label">費用</div>
+        <div class="ev-detail-value" style="font-weight:600;color:${ev.amount>0?'var(--red)':'inherit'}">${amountDisplay}</div>
+      </div>
     </div>`;
   openModal('ev-detail-modal');
 }
 
 let editEvIdx = 0; // Bug #9 fix: separate variable for edit index, captured at edit-open time
+let evCurrency = 'NTD'; // currency for event expense field
+
+function setEvCur(c){
+  evCurrency=c;
+  document.getElementById('ev-cur-ntd').classList.toggle('on',c==='NTD');
+  document.getElementById('ev-cur-jpy').classList.toggle('on',c==='JPY');
+}
 
 function editCurrentEvent(){
   closeModal('ev-detail-modal');
   const ev=days[viewEvDayIdx].events[viewEvIdx];
   isEditingEvent=true;
   addEvDayIdx=viewEvDayIdx;
-  editEvIdx=viewEvIdx; // Bug #9 fix: capture index at the time edit is initiated
+  editEvIdx=viewEvIdx;
   document.getElementById('ev-modal-title').textContent=`編輯事項`;
   document.getElementById('ev-type').value=ev.type;
   document.getElementById('ev-title').value=ev.title;
   document.getElementById('ev-time').value=ev.time==='--:--'?'':ev.time;
-  // Populate date field — use stored ev.date if available, else derive from tripInfo
   if(ev.date){
     document.getElementById('ev-date').value=ev.date;
   } else {
@@ -1093,6 +1161,11 @@ function editCurrentEvent(){
   }
   document.getElementById('ev-address').value=ev.addr||'';
   document.getElementById('ev-note').value=ev.note||'';
+  // Restore expense fields
+  document.getElementById('ev-amount').value=ev.amount||'';
+  evCurrency=ev.amountCurrency||'NTD';
+  document.getElementById('ev-cur-ntd').classList.toggle('on',evCurrency==='NTD');
+  document.getElementById('ev-cur-jpy').classList.toggle('on',evCurrency==='JPY');
   openModal('ev-modal');
 }
 
@@ -1118,9 +1191,12 @@ function openEvModal(dayIdx){
   document.getElementById('ev-modal-title').textContent=`Day ${days[dayIdx].day} 新增事項`;
   ['ev-title','ev-address','ev-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ev-time').value='';
+  document.getElementById('ev-amount').value='';
   document.getElementById('ev-type').value='景點';
   document.getElementById('ev-title').style.outline='';
-  // Pre-fill date from day's date string (e.g. "4月10日" → derive from tripInfo.startDate + day offset)
+  evCurrency='NTD';
+  document.getElementById('ev-cur-ntd').classList.add('on');
+  document.getElementById('ev-cur-jpy').classList.remove('on');
   const d=new Date(tripInfo.startDate);
   d.setDate(d.getDate()+(dayIdx));
   document.getElementById('ev-date').value=d.toISOString().slice(0,10);
@@ -1131,19 +1207,41 @@ function saveEvent(){
   const title=document.getElementById('ev-title').value.trim();
   if(!title){document.getElementById('ev-title').style.outline='2px solid var(--red)';return;}
   document.getElementById('ev-title').style.outline='';
-  const evDate=document.getElementById('ev-date').value; // e.g. "2025-04-10"
+  const evDate=document.getElementById('ev-date').value;
   const evTime=document.getElementById('ev-time').value||'--:--';
+  const evAmount=parseFloat(document.getElementById('ev-amount').value)||0;
+  // Map event type → expense category
+  const typeToExpCat={景點:'activity',餐廳:'food',交通:'transport',購物:'shop',住宿:'hotel',航班:'transport',其他:'other'};
   const ev={
-    time:evTime,
-    date:evDate,
+    time:evTime,date:evDate,
     type:document.getElementById('ev-type').value,
     title,
     addr:document.getElementById('ev-address').value.trim(),
     note:document.getElementById('ev-note').value.trim(),
     tags:[document.getElementById('ev-type').value],
+    amount:evAmount,
+    amountCurrency:evCurrency,
+    expenseId:isEditingEvent?days[addEvDayIdx].events[editEvIdx].expenseId:null,
   };
+  // Sync to expenses
+  if(evAmount>0){
+    const expCat=typeToExpCat[ev.type]||'other';
+    if(ev.expenseId){
+      // Update existing expense
+      const idx=expenses.findIndex(e=>e.id===ev.expenseId);
+      if(idx>-1){expenses[idx]={...expenses[idx],name:title,amount:evAmount,currency:evCurrency,cat:expCat};}
+    } else {
+      // Add new expense
+      ev.expenseId=Date.now();
+      expenses.unshift({id:ev.expenseId,name:title,amount:evAmount,currency:evCurrency,cat:expCat,note:`Day ${days[addEvDayIdx].day}`,splits:[...members]});
+    }
+  } else if(ev.expenseId){
+    // Amount cleared — remove linked expense
+    expenses=expenses.filter(e=>e.id!==ev.expenseId);
+    ev.expenseId=null;
+  }
   if(isEditingEvent){
-    days[addEvDayIdx].events[editEvIdx]=ev; // Bug #9 fix: use editEvIdx (captured at edit-open), not viewEvIdx
+    days[addEvDayIdx].events[editEvIdx]=ev;
   } else {
     days[addEvDayIdx].events.push(ev);
     days[addEvDayIdx].events.sort((a,b)=>(a.time==='--:--'?'99:99':a.time).localeCompare(b.time==='--:--'?'99:99':b.time));
