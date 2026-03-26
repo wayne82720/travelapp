@@ -43,7 +43,6 @@
     --purple:#BF5AF2;--purple-light:rgba(191,90,242,0.14);
   }
   .status-bar,.nav-bar{background:rgba(17,17,20,0.96)!important;}
-  .tab-bar{background:rgba(17,17,20,0.96)!important;}
   .seg-btn.active{background:var(--gray4)!important;}
   .seg-wrap{background:var(--gray5)!important;}
   .sum-inner{background:var(--card2)!important;}
@@ -86,32 +85,59 @@ body{
 .nav-subtitle{font-size:12px;color:var(--gray);margin-top:2px;letter-spacing:0.1px;}
 
 /* ── Tab content ────────────────────────────────────── */
-.tab-content{display:none;padding-bottom:calc(var(--tab-h) + 12px);}
+.tab-content{display:none;padding-bottom:calc(var(--tab-h) + 16px);}
 .tab-content.active{display:block;}
 
 /* ── Tab bar ────────────────────────────────────────── */
 .tab-bar{
   position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-  width:100%;max-width:430px;height:var(--tab-h);
-  background:rgba(255,255,255,0.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border-top:0.5px solid var(--sep);display:flex;z-index:100;padding-bottom:var(--safe-bot);
+  width:100%;max-width:430px;
+  height:var(--tab-h);
+  /* No background — pill handles its own bg */
+  background:transparent;
+  border-top:none;
+  display:flex;align-items:flex-start;justify-content:center;
+  z-index:100;
+  padding-top:10px;
+  padding-bottom:var(--safe-bot);
+  pointer-events:none; /* Let clicks pass through to page except pill */
+}
+/* The floating pill itself */
+.tab-pill{
+  display:flex;align-items:center;
+  background:rgba(22,22,26,0.88);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:40px;
+  padding:6px 8px;
+  gap:2px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.28),0 1px 6px rgba(0,0,0,0.18);
+  border:0.5px solid rgba(255,255,255,0.08);
+  pointer-events:all;
 }
 .tab-item{
-  flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:3px;cursor:pointer;padding-top:8px;
-  transition:opacity var(--transition);
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;cursor:pointer;
+  padding:8px 18px;border-radius:32px;
+  transition:all 0.2s cubic-bezier(0.4,0,0.2,1);
+  min-width:60px;
 }
-.tab-item:active{opacity:0.5;}
-.tab-svg{width:25px;height:25px;}
+.tab-item:active{opacity:0.6;transform:scale(0.94);}
+.tab-item.active{
+  background:rgba(255,255,255,0.12);
+}
+.tab-svg{width:22px;height:22px;}
 .tab-svg path,.tab-svg rect,.tab-svg circle,.tab-svg polyline,.tab-svg line,.tab-svg polygon{
-  stroke:var(--gray3);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  stroke:rgba(255,255,255,0.35);stroke-width:1.7;fill:none;
+  stroke-linecap:round;stroke-linejoin:round;
   transition:stroke var(--transition);
 }
 .tab-item.active .tab-svg path,.tab-item.active .tab-svg rect,
 .tab-item.active .tab-svg circle,.tab-item.active .tab-svg polyline,
-.tab-item.active .tab-svg line,.tab-item.active .tab-svg polygon{stroke:var(--blue);}
-.tab-label{font-size:10px;font-weight:600;color:var(--gray2);letter-spacing:0.2px;transition:color var(--transition);}
-.tab-item.active .tab-label{color:var(--blue);}
+.tab-item.active .tab-svg line,.tab-item.active .tab-svg polygon{
+  stroke:#fff;
+}
+.tab-label{font-size:10px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.2px;transition:color var(--transition);}
+.tab-item.active .tab-label{color:#fff;}
 
 /* ── Hero card ──────────────────────────────────────── */
 .hero-card{
@@ -132,14 +158,17 @@ body{
   flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .hero-edit-btn{
-  width:28px;height:28px;border-radius:50%;
-  border:1px solid rgba(255,255,255,0.25);
-  background:rgba(255,255,255,0.07);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;flex-shrink:0;font-size:12px;
+  display:flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:20px;
+  border:none;
+  background:rgba(255,255,255,0.08);
+  cursor:pointer;flex-shrink:0;
+  font-size:11px;font-weight:500;
+  color:rgba(255,255,255,0.45);
+  letter-spacing:0.2px;
   transition:all var(--transition);
 }
-.hero-edit-btn:active{background:rgba(255,255,255,0.15);}
+.hero-edit-btn:active{background:rgba(255,255,255,0.16);color:rgba(255,255,255,0.75);}
 .hero-dates{font-size:12.5px;opacity:0.65;margin-top:6px;letter-spacing:0.1px;position:relative;}
 .hero-plane{position:absolute;top:16px;right:20px;font-size:28px;opacity:0.5;filter:blur(0.3px);}
 
@@ -527,7 +556,10 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   <div class="hero-card" id="hero-card">
     <div class="hero-name-row">
       <div class="hero-name" id="hero-name">🗼 東京</div>
-      <div class="hero-edit-btn" onclick="startEditName()" title="編輯名稱">✏️</div>
+      <div class="hero-edit-btn" onclick="startEditName()" title="編輯名稱">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        編輯
+      </div>
     </div>
     <div class="hero-dates" id="hero-dates">2025年4月10日 – 4月15日・6天5夜</div>
   </div>
@@ -604,6 +636,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
 
 <!-- TAB BAR -->
 <div class="tab-bar">
+  <div class="tab-pill">
   <div class="tab-item active" id="tab-btn-itinerary" onclick="switchTab('itinerary')">
     <svg class="tab-svg" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
     <div class="tab-label">行程</div>
@@ -619,6 +652,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   <div class="tab-item" id="tab-btn-notes" onclick="switchTab('notes')">
     <svg class="tab-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
     <div class="tab-label">筆記</div>
+  </div>
   </div>
 </div>
 
