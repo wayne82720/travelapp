@@ -46,7 +46,7 @@
     --orange:#FFB340;--orange-light:rgba(255,179,64,0.14);
     --purple:#BF5AF2;--purple-light:rgba(191,90,242,0.14);
   }
-  .status-bar,.nav-bar{background:rgba(17,17,20,0.96)!important;}
+  .nav-bar{background:rgba(17,17,20,0.96)!important;}
   .seg-btn.active{background:var(--gray4)!important;}
   .seg-wrap{background:var(--gray5)!important;}
   .sum-inner{background:var(--card2)!important;}
@@ -68,21 +68,12 @@ body{
   position:relative; /* Contain fixed children within body bounds */
 }
 
-/* ── Status bar ─────────────────────────────────────── */
-.status-bar{
-  height:var(--safe-top);background:var(--card);
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 20px 0;position:sticky;top:0;z-index:100;
-  border-bottom:0.5px solid var(--sep2);
-}
-.status-bar .time{font-size:15px;font-weight:700;letter-spacing:0.2px;}
-.status-icons{display:flex;gap:5px;align-items:center;font-size:11px;color:var(--gray);}
 
 /* ── Nav bar ────────────────────────────────────────── */
 .nav-bar{
   background:rgba(255,255,255,0.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border-bottom:0.5px solid var(--sep);padding:8px 16px 13px;
-  position:sticky;top:47px;z-index:99;
+  border-bottom:0.5px solid var(--sep);padding:12px 16px 13px;
+  position:sticky;top:0;z-index:99;
 }
 @media(prefers-color-scheme:dark){.nav-bar{background:rgba(17,17,20,0.92)!important;}}
 .nav-bar h1{font-size:27px;font-weight:700;letter-spacing:-0.6px;color:var(--text);}
@@ -570,10 +561,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
 </head>
 <body>
 
-<div class="status-bar">
-  <span class="time" id="status-time">9:41</span>
-  <div class="status-icons"><span>●●●●</span><span>WiFi</span><span>🔋</span></div>
-</div>
+
 <div class="nav-bar">
   <h1 id="nav-title">我的旅程</h1>
   <div class="nav-subtitle" id="nav-subtitle">日本東京 · 4月旅行</div>
@@ -1470,16 +1458,6 @@ function closeModal(id){
 function ovClick(e,id){if(e.target.id===id)closeModal(id);}
 
 // ===== INIT =====
-// Bug #11 fix: real-time clock instead of hardcoded "9:41"
-function updateClock(){
-  const now=new Date();
-  const h=now.getHours().toString().padStart(2,'0');
-  const m=now.getMinutes().toString().padStart(2,'0');
-  const el=document.getElementById('status-time');
-  if(el) el.textContent=`${h}:${m}`;
-}
-updateClock();
-setInterval(updateClock,10000);
 
 updateHeroCard();
 renderItinerary();
