@@ -535,6 +535,19 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   opacity:0.5;cursor:pointer;
 }
 @media(min-width:430px){body{box-shadow:0 0 60px rgba(0,0,0,0.12);}}
+
+/* ── Toast ─────────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:calc(var(--tab-h) + 16px);left:50%;transform:translateX(-50%);
+  background:rgba(20,20,24,0.92);color:white;
+  padding:10px 20px;border-radius:20px;
+  font-size:13.5px;font-weight:500;
+  white-space:nowrap;z-index:9999;
+  backdrop-filter:blur(10px);
+  box-shadow:0 4px 16px rgba(0,0,0,0.25);
+  animation:toastIn 0.22s ease;pointer-events:none;
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
 </style>
 </head>
 <body>
@@ -551,9 +564,15 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   <div class="hero-card" id="hero-card">
     <div class="hero-name-row">
       <div class="hero-name" id="hero-name">🗼 東京</div>
-      <div class="hero-edit-btn" onclick="startEditName()" title="編輯名稱">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        編輯
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <div class="hero-edit-btn" onclick="shareTrip()" title="分享行程">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          分享
+        </div>
+        <div class="hero-edit-btn" onclick="startEditName()" title="編輯名稱">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          編輯
+        </div>
       </div>
     </div>
     <div class="hero-dates" id="hero-dates">2025年4月10日 – 4月15日・6天5夜</div>
@@ -856,7 +875,64 @@ input[type="time"]::-webkit-calendar-picker-indicator{
 // ===== UTILS =====
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
-// ===== LOCALSTORAGE =====
+// ===== SHARE (URL encode) =====
+function showToast(msg, duration=2200){
+  const el=document.createElement('div');
+  el.className='toast';el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>{
+    el.style.transition='opacity 0.3s';
+    el.style.opacity='0';
+    setTimeout(()=>el.remove(),320);
+  },duration);
+}
+
+function shareTrip(){
+  try{
+    const payload={
+      tripInfo,
+      days:days.map(d=>({...d,events:d.events})),
+      expenses,notes
+    };
+    const json=JSON.stringify(payload);
+    // btoa with Unicode support
+    const b64=btoa(unescape(encodeURIComponent(json)));
+    const url=location.origin+location.pathname+'?share='+b64;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(()=>{
+        showToast('✅ 分享連結已複製！');
+      }).catch(()=>fallbackCopy(url));
+    } else {
+      fallbackCopy(url);
+    }
+  }catch(e){showToast('⚠️ 產生連結失敗');}
+}
+
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');
+  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand('copy');showToast('✅ 分享連結已複製！');}
+  catch{showToast('⚠️ 請手動複製網址');}
+  document.body.removeChild(ta);
+}
+
+function loadSharedData(){
+  try{
+    const params=new URLSearchParams(location.search);
+    const b64=params.get('share');
+    if(!b64) return false;
+    const json=decodeURIComponent(escape(atob(b64)));
+    const d=JSON.parse(json);
+    if(d.tripInfo) Object.assign(tripInfo,d.tripInfo);
+    if(d.days){days.length=0;d.days.forEach(x=>days.push(x));}
+    if(d.expenses){expenses.length=0;d.expenses.forEach(x=>expenses.push(x));}
+    if(d.notes){notes.length=0;d.notes.forEach(x=>notes.push(x));}
+    // Show readonly banner
+    showToast('👀 正在瀏覽分享的行程',3500);
+    return true;
+  }catch(e){return false;}
+}
 const LS_KEY='tp_v1';
 function saveData(){
   try{
@@ -1761,7 +1837,8 @@ function closeModal(id){
 function ovClick(e,id){if(e.target.id===id)closeModal(id);}
 
 // ===== INIT =====
-loadData();
+// 1. Try URL share param first, 2. fallback to localStorage
+if(!loadSharedData()) loadData();
 updateHeroCard();
 renderItinerary();
 renderChecklists();
