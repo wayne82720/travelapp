@@ -36,33 +36,6 @@
   --transition:0.18s cubic-bezier(0.4,0,0.2,1);
 }
 
-/* ── Dark mode ──────────────────────────────────────── */
-@media(prefers-color-scheme:dark){
-  :root{
-    --bg:#111114;--card:#1C1C20;--card2:#242428;--text:#F2F2F7;--text2:#AEAEB8;
-    --sep:rgba(255,255,255,0.08);--sep2:rgba(255,255,255,0.04);
-    --gray:#8E8E98;--gray2:#636368;--gray3:#3E3E44;--gray4:#2E2E34;
-    --gray5:#232328;--gray6:#1A1A1E;
-    --shadow-sm:0 1px 4px rgba(0,0,0,0.3);
-    --shadow-md:0 4px 16px rgba(0,0,0,0.4);
-    --shadow-lg:0 8px 32px rgba(0,0,0,0.5);
-    --blue:#5DB8E8;--blue-light:rgba(93,184,232,0.14);--blue-glow:rgba(93,184,232,0.2);
-    --green:#30C060;--green-light:rgba(48,192,96,0.14);
-    --red:#FF453A;--red-light:rgba(255,69,58,0.12);
-    --orange:#FFB340;--orange-light:rgba(255,179,64,0.14);
-    --purple:#BF5AF2;--purple-light:rgba(191,90,242,0.14);
-  }
-  .nav-bar{background:rgba(17,17,20,0.96)!important;}
-  .seg-btn.active{background:var(--gray4)!important;}
-  .seg-wrap{background:var(--gray5)!important;}
-  .sum-inner{background:var(--card2)!important;}
-  .m-input,.m-select,.mem-input{background:var(--gray5)!important;color:var(--text)!important;}
-  .cur-toggle,.m-chip,.m-cat,.mem-chip{background:var(--gray5)!important;}
-  .m-cat.on,.m-chip.on{background:var(--blue-light)!important;}
-  .modal-sheet{background:var(--card)!important;}
-  .ev-detail-body{background:var(--gray6)!important;}
-}
-
 /* ── Reset & base ───────────────────────────────────── */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;}
@@ -81,7 +54,6 @@ body{
   border-bottom:0.5px solid var(--sep);padding:12px 16px 13px;
   position:sticky;top:0;z-index:99;
 }
-@media(prefers-color-scheme:dark){.nav-bar{background:rgba(17,17,20,0.92)!important;}}
 .nav-bar h1{font-size:27px;font-weight:700;letter-spacing:-0.6px;color:var(--text);}
 .nav-subtitle{font-size:12px;color:var(--gray);margin-top:2px;letter-spacing:0.1px;}
 
@@ -422,11 +394,13 @@ body{
   overflow:hidden;
   box-shadow:0 20px 60px rgba(0,0,0,0.3),0 6px 20px rgba(0,0,0,0.15);
   flex-shrink:0;
+  box-sizing:border-box;
 }
 /* Scrollable inner body — padding here is never clipped */
 .modal-body{
   padding:22px 20px 24px;
   overflow-y:auto;
+  overflow-x:hidden;
   max-height:calc(100vh - 80px);
   -webkit-overflow-scrolling:touch;
   box-sizing:border-box;
@@ -551,16 +525,9 @@ input[type="date"],input[type="time"]{
   -webkit-appearance:none;
   font-family:var(--font);
 }
-@media(prefers-color-scheme:dark){
-  input[type="date"],input[type="time"]{color-scheme:dark;}
-}
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator{
-  opacity:0.5;cursor:pointer;filter:var(--icon-filter,none);
-}
-@media(prefers-color-scheme:dark){
-  input[type="date"]::-webkit-calendar-picker-indicator,
-  input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1);}
+  opacity:0.5;cursor:pointer;
 }
 @media(min-width:430px){body{box-shadow:0 0 60px rgba(0,0,0,0.12);}}
 </style>
@@ -626,22 +593,39 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   <div class="budget-hero">
     <div class="bh-label">總花費</div>
     <div class="bh-amount"><span class="bh-cur">NT$</span><span id="total-amount">0</span></div>
-    <div class="bh-bars">
-      <div class="bh-bar-item"><div class="bh-bar-lbl">機票住宿</div><div class="bh-bar-track"><div class="bh-bar-fill" id="bar-th" style="width:0%;background:#30D158"></div></div><div class="bh-bar-amt" style="color:#30D158" id="bar-th-amt">NT$0</div></div>
-      <div class="bh-bar-item"><div class="bh-bar-lbl">餐飲</div><div class="bh-bar-track"><div class="bh-bar-fill" id="bar-food" style="width:0%;background:#FF9F0A"></div></div><div class="bh-bar-amt" style="color:#FF9F0A" id="bar-food-amt">NT$0</div></div>
-      <div class="bh-bar-item"><div class="bh-bar-lbl">其他</div><div class="bh-bar-track"><div class="bh-bar-fill" id="bar-oth" style="width:0%;background:#5E5CE6"></div></div><div class="bh-bar-amt" style="color:#5E5CE6" id="bar-oth-amt">NT$0</div></div>
+    <!-- Donut chart + legend -->
+    <div style="display:flex;align-items:center;gap:16px;margin-top:14px">
+      <!-- SVG Donut -->
+      <div style="flex-shrink:0;position:relative;width:88px;height:88px">
+        <svg id="donut-svg" width="88" height="88" viewBox="0 0 88 88">
+          <circle cx="44" cy="44" r="34" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14"/>
+          <!-- segments injected by JS -->
+        </svg>
+        <div id="donut-center" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
+          <div style="font-size:9px;opacity:0.5;letter-spacing:0.3px">最多</div>
+          <div id="donut-top-cat" style="font-size:9.5px;font-weight:700;color:white;margin-top:1px"></div>
+        </div>
+      </div>
+      <!-- Legend list -->
+      <div id="bh-legend" style="flex:1;display:flex;flex-direction:column;gap:7px"></div>
     </div>
   </div>
-  <div style="margin:0 16px 12px;display:flex;align-items:center;justify-content:space-between;">
-    <div style="font-size:12.5px;color:var(--gray)">分帳成員：<span id="members-disp" style="color:var(--text);font-weight:600">Me</span></div>
-    <div style="font-size:13px;color:var(--blue);cursor:pointer;font-weight:600" onclick="openMembersModal()">管理成員</div>
+  <!-- Member filter -->
+  <div style="margin:0 16px 10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:12px;color:var(--gray);font-weight:500">依成員篩選</div>
+      <div style="font-size:13px;color:var(--blue);cursor:pointer;font-weight:600" onclick="openMembersModal()">管理成員</div>
+    </div>
+    <div id="member-filter-chips" style="display:flex;flex-wrap:wrap;gap:7px"></div>
   </div>
-  <div class="seg-wrap">
+  <div class="seg-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap">
     <div class="seg-btn active" onclick="filterExp('all',this)">全部</div>
     <div class="seg-btn" onclick="filterExp('transport',this)">交通</div>
     <div class="seg-btn" onclick="filterExp('food',this)">餐飲</div>
     <div class="seg-btn" onclick="filterExp('hotel',this)">住宿</div>
     <div class="seg-btn" onclick="filterExp('shop',this)">購物</div>
+    <div class="seg-btn" onclick="filterExp('activity',this)">活動</div>
+    <div class="seg-btn" onclick="filterExp('other',this)">其他</div>
   </div>
   <div class="card" id="expense-list"></div>
   <div style="height:16px"></div>
@@ -907,6 +891,7 @@ let selCurrency = 'NTD';
 let selExpCat = 'food';
 let selSplits = ['Me'];
 let expFilter = 'all';
+let memberFilter = 'all'; // 'all' or member name
 let editMode = false;
 let addEvDayIdx = 0;
 let viewEvDayIdx = 0;
@@ -1306,25 +1291,90 @@ function confirmAdd(cid){
 
 // ===== EXPENSES =====
 function toNTD(e){return e.currency==='JPY'?Math.round(e.amount*JPY_RATE):e.amount;}
+function renderMemberFilterChips(){
+  const el=document.getElementById('member-filter-chips');
+  if(!el) return;
+  const all=[{id:'all',label:'全部'},...members.map(m=>({id:m,label:m}))];
+  el.innerHTML=all.map(m=>`
+    <div class="m-chip ${memberFilter===m.id?'on':''}" onclick="setMemberFilter('${escHtml(m.id)}')">${escHtml(m.label)}</div>
+  `).join('');
+}
+function setMemberFilter(m){memberFilter=m;renderMemberFilterChips();renderExpenses();}
+
 function renderExpenses(){
-  const total=expenses.reduce((s,e)=>s+toNTD(e),0);
+  // Base pool — apply member filter first
+  const pool=memberFilter==='all'
+    ?expenses
+    :expenses.filter(e=>e.splits&&e.splits.includes(memberFilter));
+
+  const total=pool.reduce((s,e)=>s+toNTD(e),0);
   document.getElementById('total-amount').textContent=total.toLocaleString();
-  const thAmt=expenses.filter(e=>['transport','hotel'].includes(e.cat)).reduce((s,e)=>s+toNTD(e),0);
-  const fAmt=expenses.filter(e=>e.cat==='food').reduce((s,e)=>s+toNTD(e),0);
-  const oAmt=expenses.filter(e=>!['transport','hotel','food'].includes(e.cat)).reduce((s,e)=>s+toNTD(e),0);
-  const mx=Math.max(thAmt,fAmt,oAmt,1);
-  document.getElementById('bar-th').style.width=(thAmt/mx*100)+'%';
-  document.getElementById('bar-food').style.width=(fAmt/mx*100)+'%';
-  document.getElementById('bar-oth').style.width=(oAmt/mx*100)+'%';
-  document.getElementById('bar-th-amt').textContent='NT$'+thAmt.toLocaleString();
-  document.getElementById('bar-food-amt').textContent='NT$'+fAmt.toLocaleString();
-  document.getElementById('bar-oth-amt').textContent='NT$'+oAmt.toLocaleString();
-  document.getElementById('members-disp').textContent=members.join(', ');
+
+  // Donut chart colours (CSS var resolved to hex for SVG stroke)
+  const CAT_COLORS_HEX={
+    transport:'#3B9ECC',food:'#E08600',hotel:'#9B44C8',
+    shop:'#E0372B',activity:'#25A244',other:'#6E6E73'
+  };
+  const CAT_LABELS={transport:'交通',food:'餐飲',hotel:'住宿',shop:'購物',activity:'活動',other:'其他'};
+  const cats=['transport','food','hotel','shop','activity','other'];
+  const amts={};
+  cats.forEach(c=>{amts[c]=pool.filter(e=>e.cat===c).reduce((s,e)=>s+toNTD(e),0);});
+
+  // Draw donut
+  const R=34, CX=44, CY=44, SW=14;
+  const circumference=2*Math.PI*R;
+  const svg=document.getElementById('donut-svg');
+  // Keep the base track circle, replace only segments
+  const segs=svg.querySelectorAll('.donut-seg');
+  segs.forEach(s=>s.remove());
+
+  const nonZero=cats.filter(c=>amts[c]>0);
+  let offset=0; // start from top (offset by -25% = -circumference*0.25)
+  const startOffset=circumference*0.25;
+
+  if(nonZero.length===0){
+    // Empty state — single gray ring already shown
+  } else {
+    nonZero.forEach(c=>{
+      const pct=amts[c]/total;
+      const dash=pct*circumference;
+      const seg=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      seg.setAttribute('class','donut-seg');
+      seg.setAttribute('cx',CX);seg.setAttribute('cy',CY);seg.setAttribute('r',R);
+      seg.setAttribute('fill','none');
+      seg.setAttribute('stroke',CAT_COLORS_HEX[c]);
+      seg.setAttribute('stroke-width',SW);
+      seg.setAttribute('stroke-dasharray',`${dash} ${circumference-dash}`);
+      seg.setAttribute('stroke-dashoffset',startOffset-offset);
+      seg.setAttribute('stroke-linecap','butt');
+      svg.appendChild(seg);
+      offset+=dash;
+    });
+  }
+
+  // Top category
+  const topCat=cats.reduce((a,b)=>amts[a]>=amts[b]?a:b);
+  const topEl=document.getElementById('donut-top-cat');
+  if(topEl) topEl.textContent=total>0?CAT_LABELS[topCat]:'';
+
+  // Legend
+  const legend=document.getElementById('bh-legend');
+  if(legend){
+    legend.innerHTML=cats.filter(c=>amts[c]>0).map(c=>`
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${CAT_COLORS_HEX[c]};flex-shrink:0"></div>
+        <div style="flex:1;font-size:11px;opacity:0.65">${CAT_LABELS[c]}</div>
+        <div style="font-size:11.5px;font-weight:700">NT$${amts[c].toLocaleString()}</div>
+      </div>`).join('');
+    if(nonZero.length===0) legend.innerHTML='<div style="font-size:12px;opacity:0.4">尚無消費記錄</div>';
+  }
+
+  renderMemberFilterChips();
+
   const list=document.getElementById('expense-list');
-  const filtered=expFilter==='all'?expenses:expenses.filter(e=>e.cat===expFilter);
+  const filtered=expFilter==='all'?pool:pool.filter(e=>e.cat===expFilter);
   if(!filtered.length){list.innerHTML='<div style="padding:24px;text-align:center;color:var(--gray);font-size:14px">尚無記錄</div>';return;}
   list.innerHTML=filtered.map(e=>{
-    // Bug fix: escape user-entered name and note before injecting into innerHTML
     const safeName=escHtml(e.name);
     const safeNote=escHtml(e.note);
     const dispAmt=e.currency==='JPY'?`¥${e.amount.toLocaleString()} (NT$${toNTD(e).toLocaleString()})`:`NT$${e.amount.toLocaleString()}`;
@@ -1386,7 +1436,7 @@ function addMember(){
   if(!name||members.some(m=>m.toLowerCase()===name.toLowerCase())){inp.value='';return;}
   members.push(name);inp.value='';renderMemChips();renderExpenses();
 }
-function removeMember(name){members=members.filter(m=>m!==name);renderMemChips();renderExpenses();}
+function removeMember(name){members=members.filter(m=>m!==name);if(memberFilter===name)memberFilter='all';renderMemChips();renderExpenses();}
 
 // ===== NOTES =====
 let notes = [
