@@ -175,12 +175,15 @@ body{
 .day-weather-main{font-size:11.5px;color:var(--gray);white-space:nowrap;font-weight:500;}
 .day-weather-rain{font-size:10.5px;font-weight:600;}
 .day-add-btn{
-  margin-left:4px;width:26px;height:26px;border-radius:50%;
-  background:var(--blue-light);color:var(--blue);
-  font-size:18px;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;flex-shrink:0;line-height:1;transition:all var(--transition);
+  padding:3px 0 3px 10px;
+  background:none;color:var(--blue);
+  font-size:12px;font-weight:600;
+  display:flex;align-items:center;
+  cursor:pointer;flex-shrink:0;
+  transition:opacity var(--transition);white-space:nowrap;
+  letter-spacing:0.1px;
 }
-.day-add-btn:active{background:var(--blue-glow);}
+.day-add-btn:active{opacity:0.5;}
 
 /* ── Timeline ───────────────────────────────────────── */
 .timeline-item{display:flex;padding:0 16px;}
@@ -587,10 +590,6 @@ input[type="time"]::-webkit-calendar-picker-indicator{
 <div class="tab-content" id="tab-account">
   <div class="acct-topbar">
     <div style="font-size:18px;font-weight:700">花費記錄</div>
-    <button class="add-exp-btn" onclick="openExpModal()">
-      <svg width="13" height="13" viewBox="0 0 13 13"><line x1="6.5" y1="1" x2="6.5" y2="12" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="6.5" x2="12" y2="6.5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
-      新增消費
-    </button>
   </div>
   <div class="budget-hero">
     <div class="bh-label">總花費</div>
@@ -618,7 +617,13 @@ input[type="time"]::-webkit-calendar-picker-indicator{
       <div style="font-size:12px;color:var(--gray);font-weight:500">依成員篩選</div>
       <div style="font-size:13px;color:var(--blue);cursor:pointer;font-weight:600" onclick="openMembersModal()">管理成員</div>
     </div>
-    <div id="member-filter-chips" style="display:flex;flex-wrap:wrap;gap:7px"></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div id="member-filter-chips" style="display:flex;flex-wrap:wrap;gap:7px;flex:1"></div>
+      <button class="add-exp-btn" onclick="openExpModal()" style="flex-shrink:0">
+        <svg width="11" height="11" viewBox="0 0 13 13"><line x1="6.5" y1="1" x2="6.5" y2="12" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="6.5" x2="12" y2="6.5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+        新增消費
+      </button>
+    </div>
   </div>
   <div class="seg-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap">
     <div class="seg-btn active" onclick="filterExp('all',this)">全部</div>
@@ -714,8 +719,10 @@ input[type="time"]::-webkit-calendar-picker-indicator{
         </div>
       </div>
     </div>
-    <button class="m-confirm" onclick="saveEvent()">儲存行程</button>
-    <button class="ev-detail-btn delete" id="ev-delete-inline-btn" onclick="deleteFromEditModal()" style="display:none;width:100%;margin-top:10px;padding:14px;border-radius:var(--radius-md);font-size:15px;font-weight:600;font-family:var(--font);cursor:pointer;border:none;">刪除</button>
+    <div class="ev-detail-actions" style="margin-top:16px">
+      <button class="ev-detail-btn edit" onclick="saveEvent()">儲存</button>
+      <button class="ev-detail-btn delete" id="ev-delete-inline-btn" onclick="deleteFromEditModal()">刪除</button>
+    </div>
     <div class="m-cancel" onclick="closeModal('ev-modal')">取消</div>
   </div></div>
 </div>
@@ -1049,19 +1056,18 @@ function dotClass(t){
 
 function renderItinerary(){
   const c=document.getElementById('itinerary-container');
+  const weekdays=['日','一','二','三','四','五','六'];
   c.innerHTML=days.map((d,di)=>{
-    const isFirst=di===0, isLast=di===days.length-1;
-    if(!isFirst && !isLast && d.events.length===0) return '';
+    // Hide any day with no events
+    if(d.events.length===0) return '';
     const w=weatherData[d.date];
-    // Bug #13 fix: when no weather data, insert flex spacer so + button stays right-aligned
-    const weatherHtml=w?`
-      <div class="day-weather">
-        <div class="day-weather-main">${w.icon} ${w.min}°-${w.max}°</div>
-        <div class="day-weather-rain" style="color:${rainColor(w.rain)}">☔ ${w.rain}%</div>
-      </div>`:'<div style="margin-left:auto"></div>';
+    // Compute weekday from tripInfo.startDate + di
+    const dateObj=new Date(tripInfo.startDate);
+    dateObj.setDate(dateObj.getDate()+di);
+    const wdStr=`（${weekdays[dateObj.getDay()]}）`;
+    const weatherInline=w?`<span style="font-size:11.5px;color:var(--gray);font-weight:500;white-space:nowrap">${w.icon} ${w.min}°-${w.max}° <span style="color:${rainColor(w.rain)}">☔${w.rain}%</span></span>`:'';
     const evHtml=d.events.map((ev,ei)=>{
       const addrHtml=ev.addr?`<a class="tc-addr" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.addr)}" target="_blank" onclick="event.stopPropagation()">📍 ${ev.addr.split(' ')[0]}</a>`:'';
-      // Only show category tag — matched to expense colour system
       const typeTagClass={
         '景點':'tag-activity','餐廳':'tag-food','交通':'tag-transport',
         '購物':'tag-shop','住宿':'tag-hotel','航班':'tag-transport','其他':'tag-other'
@@ -1084,10 +1090,10 @@ function renderItinerary(){
     }).join('');
     return `<div class="day-header">
       <span class="day-num">Day ${d.day}</span>
-      <span class="day-date">${d.date}</span>
-      ${di===0?'<span class="day-badge">出發日</span>':di===days.length-1?'<span class="day-badge">回程日</span>':''}
-      ${weatherHtml}
-      <span class="day-add-btn" onclick="openEvModal(${di})">＋</span>
+      <span class="day-date">${d.date}${wdStr}${weatherInline?'&nbsp;':''}</span>
+      ${weatherInline}
+      <span style="flex:1"></span>
+      <span class="day-add-btn" onclick="openEvModal(${di})">＋ 編輯行程</span>
     </div>${evHtml}`;
   }).join('');
 }
@@ -1162,6 +1168,8 @@ function editCurrentEvent(){
   editEvIdx=viewEvIdx;
   document.getElementById('ev-modal-title').textContent=`編輯事項`;
   document.getElementById('ev-delete-inline-btn').style.display='block';
+  document.getElementById('ev-delete-inline-btn').textContent='刪除';
+  document.getElementById('ev-delete-inline-btn').dataset.mode='delete';
   document.getElementById('ev-delete-inline-btn').dataset.confirming='';
   document.getElementById('ev-type').value=ev.type;
   document.getElementById('ev-title').value=ev.title;
@@ -1184,18 +1192,22 @@ function editCurrentEvent(){
 }
 
 function deleteCurrentEvent(){
-  // Bug fix: replace confirm() (blocked on some iOS WebViews) with inline confirm UI
   const btn=document.querySelector('.ev-detail-btn.delete');
   if(btn.dataset.confirming==='1'){
     days[viewEvDayIdx].events.splice(viewEvIdx,1);
+    const isFirst=viewEvDayIdx===0, isLast=viewEvDayIdx===days.length-1;
+    if(!isFirst && !isLast && days[viewEvDayIdx].events.length===0){
+      days.splice(viewEvDayIdx,1);
+      days.forEach((d,i)=>d.day=i+1);
+    }
     closeModal('ev-detail-modal');
     renderItinerary();
   } else {
     btn.dataset.confirming='1';
-    btn.textContent='確認移除？';
+    btn.textContent='確認刪除？';
     btn.style.background='rgba(255,59,48,0.22)';
     setTimeout(()=>{
-      if(btn){btn.dataset.confirming='';btn.textContent='移除';btn.style.background='';}
+      if(btn){btn.dataset.confirming='';btn.textContent='刪除';btn.style.background='';}
     },2500);
   }
 }
@@ -1204,6 +1216,11 @@ function deleteFromEditModal(){
   const btn=document.getElementById('ev-delete-inline-btn');
   if(btn.dataset.confirming==='1'){
     days[addEvDayIdx].events.splice(editEvIdx,1);
+    const isFirst=addEvDayIdx===0, isLast=addEvDayIdx===days.length-1;
+    if(!isFirst && !isLast && days[addEvDayIdx].events.length===0){
+      days.splice(addEvDayIdx,1);
+      days.forEach((d,i)=>d.day=i+1);
+    }
     closeModal('ev-modal');
     renderItinerary();
   } else {
@@ -1214,6 +1231,7 @@ function deleteFromEditModal(){
     },2500);
   }
 }
+function openEvModal(dayIdx){
   addEvDayIdx=dayIdx; isEditingEvent=false;
   document.getElementById('ev-modal-title').textContent=`Day ${days[dayIdx].day} 新增事項`;
   ['ev-title','ev-address','ev-note'].forEach(id=>document.getElementById(id).value='');
@@ -1222,6 +1240,8 @@ function deleteFromEditModal(){
   document.getElementById('ev-type').value='景點';
   document.getElementById('ev-title').style.outline='';
   document.getElementById('ev-delete-inline-btn').style.display='none';
+  document.getElementById('ev-delete-inline-btn').dataset.mode='delete';
+  document.getElementById('ev-delete-inline-btn').dataset.confirming='';
   evCurrency='NTD';
   document.getElementById('ev-cur-ntd').classList.add('on');
   document.getElementById('ev-cur-jpy').classList.remove('on');
