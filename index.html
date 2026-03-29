@@ -755,7 +755,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
 <div class="modal-overlay" id="exp-modal" onclick="ovClick(event,'exp-modal')">
   <div class="modal-sheet"><div class="modal-body">
     <div class="modal-hdr">
-      <div class="modal-title">新增消費</div>
+      <div class="modal-title" id="exp-modal-title">新增消費</div>
       <div class="modal-close" onclick="closeModal('exp-modal')">✕</div>
     </div>
     <div class="mf"><label>名稱</label><input class="m-input" id="exp-name" type="text" placeholder="例：一蘭拉麵"></div>
@@ -781,8 +781,23 @@ input[type="time"]::-webkit-calendar-picker-indicator{
     </div>
     <div class="mf"><label>分帳成員</label><div class="m-chips" id="split-chips"></div></div>
     <div class="mf"><label>備註</label><input class="m-input" id="exp-note" type="text" placeholder="例：Day 1 午餐"></div>
-    <button class="m-confirm" onclick="addExpense()">確認新增</button>
+    <button class="m-confirm" id="exp-confirm-btn" onclick="saveExpense()">確認新增</button>
     <div class="m-cancel" onclick="closeModal('exp-modal')">取消</div>
+  </div></div>
+</div>
+
+<!-- ===== EXPENSE DETAIL MODAL ===== -->
+<div class="modal-overlay" id="exp-detail-modal" onclick="ovClick(event,'exp-detail-modal')">
+  <div class="modal-sheet"><div class="modal-body">
+    <div class="modal-hdr" style="margin-bottom:4px">
+      <div class="modal-title" style="margin:0">消費詳情</div>
+      <div class="modal-close" onclick="closeModal('exp-detail-modal')">✕</div>
+    </div>
+    <div id="exp-detail-content"></div>
+    <div class="ev-detail-actions">
+      <button class="ev-detail-btn edit" onclick="editCurrentExpense()">編輯</button>
+      <button class="ev-detail-btn delete" id="exp-delete-btn" onclick="deleteCurrentExpense()">移除</button>
+    </div>
   </div></div>
 </div>
 
@@ -806,18 +821,27 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   <div class="modal-sheet"><div class="modal-body">
     <div class="modal-hdr">
       <div class="modal-title" id="note-modal-title">新增筆記</div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div id="note-delete-btn" style="display:none;font-size:13px;color:var(--red);cursor:pointer;font-weight:600;padding:4px 8px;background:var(--red-light);border-radius:8px" onclick="deleteNote()">刪除</div>
-        <div class="modal-close" onclick="closeModal('note-modal')">✕</div>
+      <div class="modal-close" onclick="closeModal('note-modal')">✕</div>
+    </div>
+    <!-- View mode -->
+    <div id="note-view-mode">
+      <div id="note-view-title" style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:10px"></div>
+      <div id="note-view-content" style="font-size:14.5px;color:var(--text2);line-height:1.7;white-space:pre-wrap;min-height:60px"></div>
+      <div class="ev-detail-actions" style="margin-top:20px">
+        <button class="ev-detail-btn edit" onclick="switchNoteToEdit()">編輯</button>
+        <button class="ev-detail-btn delete" id="note-delete-btn" onclick="deleteNote()">刪除</button>
       </div>
     </div>
-    <div class="mf"><label>標題</label><input class="m-input" id="note-title-input" type="text" placeholder="筆記標題"></div>
-    <div class="mf">
-      <label>內容</label>
-      <textarea class="m-input" id="note-content-input" placeholder="輸入筆記內容..." style="min-height:160px;resize:none;line-height:1.6"></textarea>
+    <!-- Edit mode -->
+    <div id="note-edit-mode" style="display:none">
+      <div class="mf"><label>標題</label><input class="m-input" id="note-title-input" type="text" placeholder="筆記標題"></div>
+      <div class="mf">
+        <label>內容</label>
+        <textarea class="m-input" id="note-content-input" placeholder="輸入筆記內容..." style="min-height:160px;resize:none;line-height:1.6"></textarea>
+      </div>
+      <button class="m-confirm" onclick="saveNote()">儲存筆記</button>
+      <div class="m-cancel" onclick="cancelNoteEdit()">取消</div>
     </div>
-    <button class="m-confirm" onclick="saveNote()">儲存筆記</button>
-    <div class="m-cancel" onclick="closeModal('note-modal')">取消</div>
   </div></div>
 </div>
 <script>
@@ -1381,26 +1405,126 @@ function renderExpenses(){
     const safeNote=escHtml(e.note);
     const dispAmt=e.currency==='JPY'?`¥${e.amount.toLocaleString()} (NT$${toNTD(e).toLocaleString()})`:`NT$${e.amount.toLocaleString()}`;
     const splitTxt=e.splits&&e.splits.length>1?`分帳: ${e.splits.map(escHtml).join(', ')}`:e.splits&&e.splits.length===1&&e.splits[0]!=='Me'?`付款: ${escHtml(e.splits[0])}`:'';
-    return `<div class="exp-item">
+    return `<div class="exp-item" onclick="openExpDetail(${e.id})" style="cursor:pointer">
       <div class="exp-ico ${catColors[e.cat]}">${catIcons[e.cat]}</div>
       <div class="exp-content"><div class="exp-name">${safeName}</div><div class="exp-meta">${catNames[e.cat]}${safeNote?' · '+safeNote:''}</div></div>
-      <div class="exp-right"><div class="exp-amt">-${dispAmt}</div>${splitTxt?`<div class="exp-split">${splitTxt}</div>`:''}</div>
+      <div class="exp-right">
+        <div class="exp-amt">-${dispAmt}</div>
+        ${splitTxt?`<div class="exp-split">${splitTxt}</div>`:''}
+      </div>
+      <div style="color:var(--gray3);font-size:15px;padding-left:4px;flex-shrink:0">›</div>
     </div>`;
   }).join('');
 }
 function filterExp(cat,el){expFilter=cat;document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderExpenses();}
+let editingExpId = null; // null = new, number = editing
+
+function openExpDetail(id){
+  const e=expenses.find(x=>x.id===id);
+  if(!e) return;
+  editingExpId=id;
+  const dispAmt=e.currency==='JPY'
+    ?`¥${e.amount.toLocaleString()} (NT$${toNTD(e).toLocaleString()})`
+    :`NT$${e.amount.toLocaleString()}`;
+  const splitTxt=e.splits&&e.splits.length>0?e.splits.join(', '):'—';
+  document.getElementById('exp-detail-content').innerHTML=`
+    <div class="ev-detail-body" style="margin-bottom:0">
+      <div class="ev-detail-row">
+        <div class="ev-detail-label">名稱</div>
+        <div class="ev-detail-value" style="font-weight:600">${escHtml(e.name)}</div>
+      </div>
+      <div class="ev-detail-row">
+        <div class="ev-detail-label">金額</div>
+        <div class="ev-detail-value" style="font-weight:700;color:var(--red)">${dispAmt}</div>
+      </div>
+      <div class="ev-detail-row">
+        <div class="ev-detail-label">類別</div>
+        <div class="ev-detail-value"><span class="ev-detail-tag">${catNames[e.cat]||e.cat}</span></div>
+      </div>
+      <div class="ev-detail-row">
+        <div class="ev-detail-label">成員</div>
+        <div class="ev-detail-value">${escHtml(splitTxt)}</div>
+      </div>
+      <div class="ev-detail-row">
+        <div class="ev-detail-label">備註</div>
+        <div class="ev-detail-value" style="${e.note?'':'color:var(--gray2)'}">${e.note?escHtml(e.note):'無'}</div>
+      </div>
+    </div>`;
+  // Reset delete button
+  const delBtn=document.getElementById('exp-delete-btn');
+  if(delBtn){delBtn.dataset.confirming='';delBtn.textContent='移除';delBtn.style.background='';}
+  openModal('exp-detail-modal');
+}
+
+function editCurrentExpense(){
+  const e=expenses.find(x=>x.id===editingExpId);
+  if(!e) return;
+  closeModal('exp-detail-modal');
+  // Populate form
+  document.getElementById('exp-modal-title').textContent='編輯消費';
+  document.getElementById('exp-confirm-btn').textContent='儲存變更';
+  document.getElementById('exp-name').value=e.name;
+  document.getElementById('exp-amount').value=e.amount;
+  document.getElementById('exp-note').value=e.note||'';
+  document.getElementById('exp-name').style.outline='';
+  selCurrency=e.currency||'NTD';
+  selExpCat=e.cat;
+  selSplits=[...(e.splits||members)];
+  document.getElementById('cur-ntd').classList.toggle('on',selCurrency==='NTD');
+  document.getElementById('cur-jpy').classList.toggle('on',selCurrency==='JPY');
+  document.querySelectorAll('.m-cat').forEach(c=>c.classList.remove('on'));
+  const catEl=document.querySelector(`.m-cat[data-cat="${selExpCat}"]`);
+  if(catEl) catEl.classList.add('on');
+  renderSplitChips();
+  openModal('exp-modal');
+}
+
+function deleteCurrentExpense(){
+  const btn=document.getElementById('exp-delete-btn');
+  if(btn.dataset.confirming==='1'){
+    expenses=expenses.filter(x=>x.id!==editingExpId);
+    closeModal('exp-detail-modal');
+    renderExpenses();
+  } else {
+    btn.dataset.confirming='1';
+    btn.textContent='確認移除？';
+    btn.style.background='rgba(224,55,43,0.2)';
+    setTimeout(()=>{
+      if(btn){btn.dataset.confirming='';btn.textContent='移除';btn.style.background='';}
+    },2500);
+  }
+}
+
 function openExpModal(){
+  editingExpId=null;
   selCurrency='NTD';selExpCat='food';selSplits=[...members];
+  document.getElementById('exp-modal-title').textContent='新增消費';
+  document.getElementById('exp-confirm-btn').textContent='確認新增';
   document.getElementById('exp-name').value='';
   document.getElementById('exp-amount').value='';
   document.getElementById('exp-note').value='';
   document.getElementById('exp-name').style.outline='';
   document.querySelectorAll('.m-cat').forEach(c=>c.classList.remove('on'));
   document.querySelector('.m-cat[data-cat="food"]').classList.add('on');
-  // Bug #4 fix: reset both currency buttons, not just cur-jpy
   document.getElementById('cur-ntd').classList.add('on');
   document.getElementById('cur-jpy').classList.remove('on');
   renderSplitChips();openModal('exp-modal');
+}
+
+function saveExpense(){
+  const name=document.getElementById('exp-name').value.trim();
+  const amount=parseFloat(document.getElementById('exp-amount').value)||0;
+  const note=document.getElementById('exp-note').value.trim();
+  if(!name||!amount){document.getElementById('exp-name').style.outline='2px solid var(--red)';return;}
+  if(editingExpId){
+    // Edit existing
+    const idx=expenses.findIndex(x=>x.id===editingExpId);
+    if(idx>-1) expenses[idx]={...expenses[idx],name,amount,currency:selCurrency,cat:selExpCat,note,splits:[...selSplits]};
+  } else {
+    // Add new
+    expenses.unshift({id:Date.now(),name,amount,currency:selCurrency,cat:selExpCat,note,splits:[...selSplits]});
+  }
+  closeModal('exp-modal');renderExpenses();
 }
 function renderSplitChips(){
   // Same XSS fix as renderMemChips: escape member names
@@ -1415,15 +1539,6 @@ function setCur(c){
   document.getElementById('cur-jpy').classList.toggle('on',c==='JPY');
 }
 function selCat(el){document.querySelectorAll('.m-cat').forEach(c=>c.classList.remove('on'));el.classList.add('on');selExpCat=el.dataset.cat;}
-function addExpense(){
-  const name=document.getElementById('exp-name').value.trim();
-  const amount=parseFloat(document.getElementById('exp-amount').value)||0; // Bug #5 fix: parseFloat handles decimals
-  const note=document.getElementById('exp-note').value.trim();
-  if(!name||!amount){document.getElementById('exp-name').style.outline='2px solid var(--red)';return;}
-  expenses.unshift({id:Date.now(),name,amount,currency:selCurrency,cat:selExpCat,note,splits:[...selSplits]});
-  closeModal('exp-modal');renderExpenses();
-}
-
 // ===== MEMBERS =====
 function openMembersModal(){renderMemChips();document.getElementById('mem-input').value='';openModal('mem-modal');}
 
@@ -1464,10 +1579,12 @@ function renderNotes(){
 
 function addNote(){
   editingNoteId = null;
+  document.getElementById('note-modal-title').textContent = '新增筆記';
   document.getElementById('note-title-input').value = '';
   document.getElementById('note-content-input').value = '';
-  document.getElementById('note-modal-title').textContent = '新增筆記';
-  document.getElementById('note-delete-btn').style.display = 'none';
+  // Go straight to edit mode for new notes
+  document.getElementById('note-view-mode').style.display='none';
+  document.getElementById('note-edit-mode').style.display='block';
   openModal('note-modal');
   setTimeout(()=>document.getElementById('note-title-input').focus(),300);
 }
@@ -1476,17 +1593,42 @@ function openNoteModal(id){
   const note = notes.find(n=>n.id===id);
   if(!note) return;
   editingNoteId = id;
+  document.getElementById('note-modal-title').textContent = note.title||'無標題';
+  // Show view mode
+  document.getElementById('note-view-title').textContent = note.title||'無標題';
+  document.getElementById('note-view-content').textContent = note.content||'';
+  document.getElementById('note-view-mode').style.display='block';
+  document.getElementById('note-edit-mode').style.display='none';
+  // Reset delete confirm state
+  const delBtn=document.getElementById('note-delete-btn');
+  if(delBtn){delBtn.dataset.confirming='';delBtn.textContent='刪除';delBtn.style.background='';}
+  openModal('note-modal');
+}
+
+function switchNoteToEdit(){
+  const note = notes.find(n=>n.id===editingNoteId);
+  if(!note) return;
+  document.getElementById('note-modal-title').textContent = '編輯筆記';
   document.getElementById('note-title-input').value = note.title;
   document.getElementById('note-content-input').value = note.content;
-  document.getElementById('note-modal-title').textContent = '編輯筆記';
-  document.getElementById('note-delete-btn').style.display = 'block';
-  openModal('note-modal');
+  document.getElementById('note-view-mode').style.display='none';
+  document.getElementById('note-edit-mode').style.display='block';
+  setTimeout(()=>document.getElementById('note-title-input').focus(),100);
+}
+
+function cancelNoteEdit(){
+  if(editingNoteId){
+    // Go back to view mode
+    openNoteModal(editingNoteId);
+  } else {
+    closeModal('note-modal');
+  }
 }
 
 function saveNote(){
   const title = document.getElementById('note-title-input').value.trim();
   const content = document.getElementById('note-content-input').value.trim();
-  if(!title && !content) { closeModal('note-modal'); return; }
+  if(!title && !content){ closeModal('note-modal'); return; }
   if(editingNoteId){
     const note = notes.find(n=>n.id===editingNoteId);
     note.title = title; note.content = content;
@@ -1498,10 +1640,19 @@ function saveNote(){
 }
 
 function deleteNote(){
-  if(!editingNoteId) return;
-  notes = notes.filter(n=>n.id!==editingNoteId);
-  closeModal('note-modal');
-  renderNotes();
+  const btn=document.getElementById('note-delete-btn');
+  if(btn.dataset.confirming==='1'){
+    notes = notes.filter(n=>n.id!==editingNoteId);
+    closeModal('note-modal');
+    renderNotes();
+  } else {
+    btn.dataset.confirming='1';
+    btn.textContent='確認刪除？';
+    btn.style.background='rgba(224,55,43,0.2)';
+    setTimeout(()=>{
+      if(btn){btn.dataset.confirming='';btn.textContent='刪除';btn.style.background='';}
+    },2500);
+  }
 }
 
 function openModal(id){document.getElementById(id).classList.add('open');}
