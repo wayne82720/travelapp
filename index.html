@@ -856,6 +856,31 @@ input[type="time"]::-webkit-calendar-picker-indicator{
 // ===== UTILS =====
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
+// ===== LOCALSTORAGE =====
+const LS_KEY='tp_v1';
+function saveData(){
+  try{
+    localStorage.setItem(LS_KEY,JSON.stringify({
+      tripInfo,days,expenses,
+      checklistData,members,notes
+    }));
+  }catch(e){}
+}
+function loadData(){
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    const d=JSON.parse(raw);
+    if(d.tripInfo) Object.assign(tripInfo,d.tripInfo);
+    if(d.days){days.length=0;d.days.forEach(x=>days.push(x));}
+    if(d.expenses){expenses.length=0;d.expenses.forEach(x=>expenses.push(x));}
+    if(d.checklistData){checklistData.length=0;d.checklistData.forEach(x=>checklistData.push(x));}
+    if(d.members){members.length=0;d.members.forEach(x=>members.push(x));}
+    if(d.notes){notes.length=0;d.notes.forEach(x=>notes.push(x));}
+    return true;
+  }catch(e){return false;}
+}
+
 // ===== TRIP INFO =====
 let tripInfo = {
   name: '🗼 東京',
@@ -920,6 +945,7 @@ function saveTripInfo(){
   document.getElementById('nav-subtitle').textContent=tripInfo.name+' · 行程規劃';
   closeModal('name-modal');
   renderItinerary();
+  saveData();
 }
 
 // ===== WEATHER (tenki.jp simulated data for Tokyo) =====
@@ -1083,8 +1109,7 @@ function renderItinerary(){
   const c=document.getElementById('itinerary-container');
   const weekdays=['日','一','二','三','四','五','六'];
   c.innerHTML=days.map((d,di)=>{
-    // Hide any day with no events
-    if(d.events.length===0) return '';
+    // Always show day header so user can always add events
     const w=weatherData[d.date];
     // Compute weekday from tripInfo.startDate + di
     const dateObj=new Date(tripInfo.startDate);
@@ -1227,6 +1252,7 @@ function deleteCurrentEvent(){
     }
     closeModal('ev-detail-modal');
     renderItinerary();
+    saveData();
   } else {
     btn.dataset.confirming='1';
     btn.textContent='確認刪除？';
@@ -1248,6 +1274,7 @@ function deleteFromEditModal(){
     }
     closeModal('ev-modal');
     renderItinerary();
+    saveData();
   } else {
     btn.dataset.confirming='1';
     btn.textContent='確認刪除？';
@@ -1321,9 +1348,8 @@ function saveEvent(){
   }
   closeModal('ev-modal');
   renderItinerary();
+  saveData();
 }
-
-// ===== CHECKLISTS =====
 function renderChecklists(){
   const c=document.getElementById('checklists-container');
   let total=0,done=0;
@@ -1357,8 +1383,8 @@ function renderChecklists(){
   });
 }
 function toggleSec(id){collapsedSec.has(id)?collapsedSec.delete(id):collapsedSec.add(id);renderChecklists();}
-function toggleItem(cid,iid){checklistData.find(c=>c.id===cid).items.find(i=>i.id===iid).checked^=true;renderChecklists();}
-function delItem(e,cid,iid){e.stopPropagation();checklistData.find(c=>c.id===cid).items=checklistData.find(c=>c.id===cid).items.filter(i=>i.id!==iid);renderChecklists();}
+function toggleItem(cid,iid){checklistData.find(c=>c.id===cid).items.find(i=>i.id===iid).checked^=true;renderChecklists();saveData();}
+function delItem(e,cid,iid){e.stopPropagation();checklistData.find(c=>c.id===cid).items=checklistData.find(c=>c.id===cid).items.filter(i=>i.id!==iid);renderChecklists();saveData();}
 function toggleEdit(){editMode=!editMode;document.getElementById('edit-btn').textContent=editMode?'完成':'編輯';renderChecklists();}
 function showAddInput(cid){
   // Bug #10 fix: find by data attribute instead of fragile querySelectorAll index (breaks when sections collapsed)
@@ -1377,6 +1403,7 @@ function confirmAdd(cid){
   if(!inp||!inp.value.trim()){renderChecklists();return;}
   checklistData.find(c=>c.id===cid).items.push({id:nextId++,text:inp.value.trim(),checked:false});
   renderChecklists();
+  saveData();
 }
 
 // ===== EXPENSES =====
@@ -1549,6 +1576,7 @@ function deleteCurrentExpense(){
     expenses=expenses.filter(x=>x.id!==editingExpId);
     closeModal('exp-detail-modal');
     renderExpenses();
+    saveData();
   } else {
     btn.dataset.confirming='1';
     btn.textContent='確認移除？';
@@ -1588,7 +1616,7 @@ function saveExpense(){
     // Add new
     expenses.unshift({id:Date.now(),name,amount,currency:selCurrency,cat:selExpCat,note,splits:[...selSplits]});
   }
-  closeModal('exp-modal');renderExpenses();
+  closeModal('exp-modal');renderExpenses();saveData();
 }
 function renderSplitChips(){
   // Same XSS fix as renderMemChips: escape member names
@@ -1615,9 +1643,9 @@ function addMember(){
   const name=inp.value.trim();
   // Bug fix: case-insensitive duplicate check to prevent "me" and "Me" coexisting
   if(!name||members.some(m=>m.toLowerCase()===name.toLowerCase())){inp.value='';return;}
-  members.push(name);inp.value='';renderMemChips();renderExpenses();
+  members.push(name);inp.value='';renderMemChips();renderExpenses();saveData();
 }
-function removeMember(name){members=members.filter(m=>m!==name);if(memberFilter===name)memberFilter='all';renderMemChips();renderExpenses();}
+function removeMember(name){members=members.filter(m=>m!==name);if(memberFilter===name)memberFilter='all';renderMemChips();renderExpenses();saveData();}
 
 // ===== NOTES =====
 let notes = [
@@ -1701,6 +1729,7 @@ function saveNote(){
   }
   closeModal('note-modal');
   renderNotes();
+  saveData();
 }
 
 function deleteNote(){
@@ -1709,6 +1738,7 @@ function deleteNote(){
     notes = notes.filter(n=>n.id!==editingNoteId);
     closeModal('note-modal');
     renderNotes();
+    saveData();
   } else {
     btn.dataset.confirming='1';
     btn.textContent='確認刪除？';
@@ -1731,7 +1761,7 @@ function closeModal(id){
 function ovClick(e,id){if(e.target.id===id)closeModal(id);}
 
 // ===== INIT =====
-
+loadData();
 updateHeroCard();
 renderItinerary();
 renderChecklists();
