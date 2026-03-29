@@ -891,10 +891,35 @@ function saveTripInfo(){
   if(name) tripInfo.name=name;
   if(start) tripInfo.startDate=start;
   if(end) tripInfo.endDate=end;
+
+  // Rebuild days array to match new date range
+  if(tripInfo.startDate && tripInfo.endDate){
+    const s=new Date(tripInfo.startDate);
+    const e=new Date(tripInfo.endDate);
+    const nights=Math.max(0,Math.round((e-s)/86400000));
+    const totalDays=nights+1;
+    // Format date label e.g. "4月10日"
+    const fmtDate=d=>`${d.getMonth()+1}月${d.getDate()}日`;
+    // Rebuild: keep existing events for matching day index, add empty days for new ones
+    const newDays=[];
+    for(let i=0;i<totalDays;i++){
+      const d=new Date(s); d.setDate(s.getDate()+i);
+      const existing=days[i];
+      newDays.push({
+        day:i+1,
+        date:fmtDate(d),
+        label:'',
+        events:existing?existing.events:[]
+      });
+    }
+    days.length=0;
+    newDays.forEach(d=>days.push(d));
+  }
+
   updateHeroCard();
-  // Bug #12 fix: also refresh subtitle when trip info changes
   document.getElementById('nav-subtitle').textContent=tripInfo.name+' · 行程規劃';
   closeModal('name-modal');
+  renderItinerary();
 }
 
 // ===== WEATHER (tenki.jp simulated data for Tokyo) =====
