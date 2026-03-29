@@ -715,6 +715,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
       </div>
     </div>
     <button class="m-confirm" onclick="saveEvent()">儲存行程</button>
+    <button class="ev-detail-btn delete" id="ev-delete-inline-btn" onclick="deleteFromEditModal()" style="display:none;width:100%;margin-top:10px;padding:14px;border-radius:var(--radius-md);font-size:15px;font-weight:600;font-family:var(--font);cursor:pointer;border:none;">刪除</button>
     <div class="m-cancel" onclick="closeModal('ev-modal')">取消</div>
   </div></div>
 </div>
@@ -728,7 +729,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
     </div>
     <div id="ev-detail-content"></div>
     <div class="ev-detail-actions">
-      <button class="ev-detail-btn edit" onclick="editCurrentEvent()">儲存</button>
+      <button class="ev-detail-btn edit" onclick="editCurrentEvent()">編輯</button>
       <button class="ev-detail-btn delete" onclick="deleteCurrentEvent()">刪除</button>
     </div>
   </div></div>
@@ -1049,6 +1050,8 @@ function dotClass(t){
 function renderItinerary(){
   const c=document.getElementById('itinerary-container');
   c.innerHTML=days.map((d,di)=>{
+    const isFirst=di===0, isLast=di===days.length-1;
+    if(!isFirst && !isLast && d.events.length===0) return '';
     const w=weatherData[d.date];
     // Bug #13 fix: when no weather data, insert flex spacer so + button stays right-aligned
     const weatherHtml=w?`
@@ -1158,6 +1161,8 @@ function editCurrentEvent(){
   addEvDayIdx=viewEvDayIdx;
   editEvIdx=viewEvIdx;
   document.getElementById('ev-modal-title').textContent=`編輯事項`;
+  document.getElementById('ev-delete-inline-btn').style.display='block';
+  document.getElementById('ev-delete-inline-btn').dataset.confirming='';
   document.getElementById('ev-type').value=ev.type;
   document.getElementById('ev-title').value=ev.title;
   document.getElementById('ev-time').value=ev.time==='--:--'?'':ev.time;
@@ -1195,7 +1200,20 @@ function deleteCurrentEvent(){
   }
 }
 
-function openEvModal(dayIdx){
+function deleteFromEditModal(){
+  const btn=document.getElementById('ev-delete-inline-btn');
+  if(btn.dataset.confirming==='1'){
+    days[addEvDayIdx].events.splice(editEvIdx,1);
+    closeModal('ev-modal');
+    renderItinerary();
+  } else {
+    btn.dataset.confirming='1';
+    btn.textContent='確認刪除？';
+    setTimeout(()=>{
+      if(btn){btn.dataset.confirming='';btn.textContent='刪除';}
+    },2500);
+  }
+}
   addEvDayIdx=dayIdx; isEditingEvent=false;
   document.getElementById('ev-modal-title').textContent=`Day ${days[dayIdx].day} 新增事項`;
   ['ev-title','ev-address','ev-note'].forEach(id=>document.getElementById(id).value='');
@@ -1203,6 +1221,7 @@ function openEvModal(dayIdx){
   document.getElementById('ev-amount').value='';
   document.getElementById('ev-type').value='景點';
   document.getElementById('ev-title').style.outline='';
+  document.getElementById('ev-delete-inline-btn').style.display='none';
   evCurrency='NTD';
   document.getElementById('ev-cur-ntd').classList.add('on');
   document.getElementById('ev-cur-jpy').classList.remove('on');
