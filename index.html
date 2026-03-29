@@ -728,8 +728,8 @@ input[type="time"]::-webkit-calendar-picker-indicator{
     </div>
     <div id="ev-detail-content"></div>
     <div class="ev-detail-actions">
-      <button class="ev-detail-btn edit" onclick="editCurrentEvent()">編輯</button>
-      <button class="ev-detail-btn delete" onclick="deleteCurrentEvent()">移除</button>
+      <button class="ev-detail-btn edit" onclick="editCurrentEvent()">儲存</button>
+      <button class="ev-detail-btn delete" onclick="deleteCurrentEvent()">刪除</button>
     </div>
   </div></div>
 </div>
@@ -1082,7 +1082,7 @@ function renderItinerary(){
     return `<div class="day-header">
       <span class="day-num">Day ${d.day}</span>
       <span class="day-date">${d.date}</span>
-      <span class="day-badge">${d.label}</span>
+      ${di===0?'<span class="day-badge">出發日</span>':di===days.length-1?'<span class="day-badge">回程日</span>':''}
       ${weatherHtml}
       <span class="day-add-btn" onclick="openEvModal(${di})">＋</span>
     </div>${evHtml}`;
