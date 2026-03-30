@@ -617,7 +617,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
           <optgroup label="🇯🇵 日本">
             <option value="35.6895,139.6917">東京</option>
             <option value="35.6762,139.6503">神奈川（橫濱）</option>
-            <option value="35.4437,139.6380">埼玉（さいたま）</option>
+            <option value="35.4437,139.6380">埼玉</option>
             <option value="35.7056,139.7530">千葉</option>
             <option value="36.5748,139.2394">栃木（宇都宮）</option>
             <option value="36.3912,139.0608">群馬（前橋）</option>
@@ -802,10 +802,6 @@ input[type="time"]::-webkit-calendar-picker-indicator{
         <input class="m-input" id="ev-date" type="date" style="flex:1.4;min-width:0">
         <input class="m-input" id="ev-time" type="time" style="flex:1;min-width:0">
       </div>
-    </div>
-    <div class="mf">
-      <label>地點名稱（顯示用）</label>
-      <input class="m-input" id="ev-location" type="text" placeholder="例：淺草寺、一蘭拉麵 澀谷店">
     </div>
     <div class="mf">
       <label>Google Maps 連結（選填，點擊跳轉）</label>
@@ -1637,7 +1633,6 @@ function editCurrentEvent(){
     document.getElementById('ev-date').value=d.toISOString().slice(0,10);
   }
   document.getElementById('ev-address').value=ev.addr||'';
-  document.getElementById('ev-location').value=ev.location||'';
   document.getElementById('ev-note').value=ev.note||'';
   // Restore expense fields
   document.getElementById('ev-amount').value=ev.amount||'';
@@ -1692,7 +1687,7 @@ function deleteFromEditModal(){
 function openEvModal(dayIdx){
   addEvDayIdx=dayIdx; isEditingEvent=false;
   document.getElementById('ev-modal-title').textContent=`Day ${days[dayIdx].day} 新增事項`;
-  ['ev-title','ev-address','ev-note','ev-location'].forEach(id=>{
+  ['ev-title','ev-address','ev-note'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('ev-time').value='';
@@ -1726,7 +1721,7 @@ function saveEvent(){
     time:evTime,date:evDate,
     type:document.getElementById('ev-type').value,
     title,
-    location:document.getElementById('ev-location').value.trim(),
+    location:title,
     addr:document.getElementById('ev-address').value.trim(),
     note:document.getElementById('ev-note').value.trim(),
     tags:[document.getElementById('ev-type').value],
