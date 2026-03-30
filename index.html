@@ -248,13 +248,26 @@ body{
 .tenki-strip{
   margin:0 16px 8px;background:var(--blue-light);
   border:0.5px solid rgba(59,158,204,0.2);
-  border-radius:var(--radius-sm);padding:8px 13px;
-  display:flex;align-items:center;gap:8px;
+  border-radius:var(--radius-sm);padding:10px 14px;
 }
-.tenki-logo{font-size:11px;color:var(--blue);font-weight:700;white-space:nowrap;}
-.tenki-divider{width:1px;height:14px;background:rgba(59,158,204,0.25);}
-.tenki-info{flex:1;font-size:11px;color:var(--gray);}
-.tenki-refresh{font-size:11px;color:var(--blue);cursor:pointer;white-space:nowrap;font-weight:600;}
+.tenki-strip-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:8px;
+}
+.tenki-logo{font-size:11px;color:var(--blue);font-weight:700;}
+.tenki-refresh{font-size:11px;color:var(--blue);cursor:pointer;font-weight:600;}
+.tenki-divider{display:none;}
+.tenki-info{font-size:11px;color:var(--gray);}
+.tenki-days{display:flex;gap:0;}
+.tenki-day{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 4px;border-radius:var(--radius-sm);
+}
+.tenki-day:not(:last-child){border-right:0.5px solid rgba(59,158,204,0.15);}
+.tenki-day-label{font-size:10px;color:var(--gray);font-weight:600;letter-spacing:0.2px;}
+.tenki-day-icon{font-size:20px;line-height:1;}
+.tenki-day-temp{color:var(--text);font-weight:700;font-size:11px;}
+.tenki-day-rain{font-weight:600;font-size:10.5px;}
 
 /* ── Prepare ─────────────────────────────────────────── */
 .sum-bar{
@@ -584,12 +597,13 @@ input[type="time"]::-webkit-calendar-picker-indicator{
     <div class="hero-dates" id="hero-dates">2025年4月10日 – 4月15日・6天5夜</div>
   </div>
 
-  <!-- Tenki source note -->
-  <div class="tenki-strip">
-    <span class="tenki-logo">🌤 天氣預報</span>
-    <div class="tenki-divider"></div>
-    <div class="tenki-info">天氣資料來源：Open-Meteo（實際預報）</div>
-    <span class="tenki-refresh" onclick="refreshWeather()">更新</span>
+  <!-- Weather strip — current location forecast -->
+  <div class="tenki-strip" id="tenki-strip">
+    <div class="tenki-strip-hdr">
+      <span class="tenki-logo">🌤 當前位置天氣預報</span>
+      <span class="tenki-refresh" onclick="refreshLocationWeather()">更新</span>
+    </div>
+    <div id="tenki-forecast" class="tenki-info">偵測位置中...</div>
   </div>
 
   <div id="itinerary-container"></div>
@@ -727,8 +741,12 @@ input[type="time"]::-webkit-calendar-picker-indicator{
       </div>
     </div>
     <div class="mf">
-      <label>地址（點選後開啟 Google Maps）</label>
-      <input class="m-input" id="ev-address" type="text" placeholder="輸入地址或搜尋關鍵字"
+      <label>地點名稱（顯示用）</label>
+      <input class="m-input" id="ev-location" type="text" placeholder="例：淺草寺、一蘭拉麵 澀谷店">
+    </div>
+    <div class="mf">
+      <label>Google Maps 連結（選填，點擊跳轉）</label>
+      <input class="m-input" id="ev-address" type="url" placeholder="貼上 Google Maps 連結 https://maps.app.goo.gl/..."
         onchange="geocodeAddress(this.value)">
     </div>
     <div class="mf">
@@ -1223,6 +1241,53 @@ async function fetchWeather(){
 
 function refreshWeather(){weatherCache={};tripInfo._perDayWeather={};fetchWeather();}
 
+async function fetchLocationWeather(lat,lon){
+  const today=new Date();
+  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const end=new Date(today);end.setDate(today.getDate()+2);
+  const url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon
+    +'&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+    +'&timezone=auto&start_date='+fmt(today)+'&end_date='+fmt(end);
+  const data=await(await fetch(url)).json();
+  const labels=['今天','明天','後天'];
+  const weekdays=['日','一','二','三','四','五','六'];
+  const el=document.getElementById('tenki-forecast');
+  if(!el)return;
+  const items=data.daily.time.map((iso,i)=>{
+    const d=new Date(iso+'T00:00:00');
+    const w=data.daily;
+    const rain=w.precipitation_probability_max[i]||0;
+    const rainCol=rainColor(rain);
+    return '<div class="tenki-day">'
+      +'<div class="tenki-day-label">'+labels[i]+'（'+weekdays[d.getDay()]+'）</div>'
+      +'<div class="tenki-day-icon">'+wmoToIcon(w.weathercode[i])+'</div>'
+      +'<div class="tenki-day-temp">'+Math.round(w.temperature_2m_min[i])+'°－'+Math.round(w.temperature_2m_max[i])+'°</div>'
+      +'<div class="tenki-day-rain" style="color:'+rainCol+'">☔ '+rain+'%</div>'
+      +'</div>';
+  }).join('');
+  el.className='';
+  el.innerHTML='<div class="tenki-days">'+items+'</div>';
+}
+
+async function refreshLocationWeather(){
+  const el=document.getElementById('tenki-forecast');
+  if(el)el.textContent='偵測位置中...';
+  if(!navigator.geolocation){
+    if(el)el.textContent='不支援定位';return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos=>fetchLocationWeather(pos.coords.latitude,pos.coords.longitude)
+      .catch(()=>{if(el)el.textContent='天氣載入失敗';}),
+    ()=>{
+      // Fallback to trip default coords or Tokyo
+      const c=tripInfo.coords||{lat:35.6895,lon:139.6917};
+      fetchLocationWeather(c.lat,c.lon)
+        .catch(()=>{if(el)el.textContent='天氣載入失敗';});
+    },
+    {timeout:5000}
+  );
+}
+
 
 // ===== DATA =====
 const JPY_RATE = 0.22;
@@ -1365,17 +1430,21 @@ function renderItinerary(){
   const weekdays=['日','一','二','三','四','五','六'];
   c.innerHTML=days.map((d,di)=>{
     // Always show day header so user can always add events
-    const w=getWeather(d.date);
     // Compute weekday from tripInfo.startDate + di
     const dateObj=new Date(tripInfo.startDate);
     dateObj.setDate(dateObj.getDate()+di);
     const wdStr=`（${weekdays[dateObj.getDay()]}）`;
-    const rainCol=rainColor(w?w.rain:0);
-    const weatherInline=w
-      ?('<span class="day-weather-inline">'+w.icon+' '+w.min+'°-'+w.max+'° <span style="color:'+rainCol+'">'+'☔'+w.rain+'%</span></span>')
-      :'';
     const evHtml=d.events.map((ev,ei)=>{
-      const addrHtml=ev.addr?`<a class="tc-addr" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.addr)}" target="_blank" onclick="event.stopPropagation()">📍 ${ev.addr.split(' ')[0]}</a>`:'';
+      // Show location name; if Maps URL provided, make it a link
+      const locName=ev.location||ev.addr||'';
+      const mapsUrl=ev.addr&&(ev.addr.startsWith('http')||ev.addr.startsWith('https'))
+        ?ev.addr
+        :ev.addr?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.addr)}`:'';
+      const addrHtml=locName
+        ?(mapsUrl
+          ?`<a class="tc-addr" href="${mapsUrl}" target="_blank" onclick="event.stopPropagation()">📍 ${escHtml(locName)}</a>`
+          :`<span class="tc-addr" style="color:var(--gray);cursor:default">📍 ${escHtml(locName)}</span>`)
+        :'';
       const typeTagClass={
         '景點':'tag-activity','餐廳':'tag-food','交通':'tag-transport',
         '購物':'tag-shop','住宿':'tag-hotel','航班':'tag-transport','其他':'tag-other'
@@ -1398,8 +1467,7 @@ function renderItinerary(){
     }).join('');
     return `<div class="day-header">
       <span class="day-num">Day ${d.day}</span>
-      <span class="day-date">${d.date}${wdStr}${weatherInline?'&nbsp;':''}</span>
-      ${weatherInline}
+      <span class="day-date">${d.date}${wdStr}</span>
       <span style="flex:1"></span>
       <span class="day-add-btn" onclick="openEvModal(${di})">＋ 編輯行程</span>
     </div>${evHtml}`;
@@ -1410,8 +1478,12 @@ function renderItinerary(){
 function viewEvent(di,ei){
   viewEvDayIdx=di; viewEvIdx=ei;
   const ev=days[di].events[ei];
-  const mapLink=ev.addr
-    ?`<a class="ev-detail-link" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.addr)}" target="_blank">📍 ${ev.addr}</a>`
+  const locName=ev.location||ev.addr||'';
+  const mapsUrl=ev.addr&&(ev.addr.startsWith('http')||ev.addr.startsWith('https'))
+    ?ev.addr
+    :ev.addr?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.addr)}`:'';
+  const mapLink=mapsUrl
+    ?`<a class="ev-detail-link" href="${mapsUrl}" target="_blank">🗺 開啟 Google Maps</a>`
     :'<span style="color:var(--gray2)">未設定</span>';
   // Format date display
   let dateDisplay='<span style="color:var(--gray2)">未設定</span>';
@@ -1444,7 +1516,11 @@ function viewEvent(di,ei){
         <div class="ev-detail-value">${timeDisplay}</div>
       </div>
       <div class="ev-detail-row">
-        <div class="ev-detail-label">地址</div>
+        <div class="ev-detail-label">地點</div>
+        <div class="ev-detail-value">${locName?escHtml(locName):'<span style="color:var(--gray2)">未設定</span>'}</div>
+      </div>
+      <div class="ev-detail-row">
+        <div class="ev-detail-label">地圖</div>
         <div class="ev-detail-value">${mapLink}</div>
       </div>
       <div class="ev-detail-row">
@@ -1490,6 +1566,7 @@ function editCurrentEvent(){
     document.getElementById('ev-date').value=d.toISOString().slice(0,10);
   }
   document.getElementById('ev-address').value=ev.addr||'';
+  document.getElementById('ev-location').value=ev.location||'';
   document.getElementById('ev-note').value=ev.note||'';
   // Restore expense fields
   document.getElementById('ev-amount').value=ev.amount||'';
@@ -1544,7 +1621,7 @@ function deleteFromEditModal(){
 function openEvModal(dayIdx){
   addEvDayIdx=dayIdx; isEditingEvent=false;
   document.getElementById('ev-modal-title').textContent=`Day ${days[dayIdx].day} 新增事項`;
-  ['ev-title','ev-address','ev-note'].forEach(id=>document.getElementById(id).value='');
+  ['ev-title','ev-address','ev-note','ev-location'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ev-time').value='';
   document.getElementById('ev-amount').value='';
   document.getElementById('ev-type').value='景點';
@@ -1587,6 +1664,7 @@ function saveEvent(){
     time:evTime,date:evDate,
     type:document.getElementById('ev-type').value,
     title,
+    location:document.getElementById('ev-location').value.trim(),
     addr:document.getElementById('ev-address').value.trim(),
     note:document.getElementById('ev-note').value.trim(),
     tags:[document.getElementById('ev-type').value],
@@ -2046,6 +2124,7 @@ renderChecklists();
 renderExpenses();
 renderNotes();
 fetchWeather();
+refreshLocationWeather();
 </script>
 </body>
 </html>
