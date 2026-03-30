@@ -853,14 +853,6 @@ input[type="time"]::-webkit-calendar-picker-indicator{
       <div class="modal-close" onclick="closeModal('name-modal')">✕</div>
     </div>
     <div class="mf"><label>旅遊名稱</label><input class="m-input" id="trip-name-input" type="text" placeholder="例：🗼 東京"></div>
-    <div class="mf">
-      <label>目的地城市（用於天氣查詢）</label>
-      <div style="display:flex;gap:8px">
-        <input class="m-input" id="trip-city-input" type="text" placeholder="例：Tokyo、Osaka、Sapporo" style="flex:1">
-        <button onclick="searchCity()" style="flex-shrink:0;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);padding:0 16px;font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;">搜尋</button>
-      </div>
-      <div id="city-result" style="margin-top:6px;font-size:12px;color:var(--gray)"></div>
-    </div>
     <div style="display:flex;gap:10px;margin-bottom:14px">
       <div style="flex:1"><label style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;display:block;margin-bottom:6px">出發日期</label><input class="m-input" id="trip-start" type="date"></div>
       <div style="flex:1"><label style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;display:block;margin-bottom:6px">返回日期</label><input class="m-input" id="trip-end" type="date"></div>
@@ -1106,14 +1098,6 @@ function startEditName(){
   document.getElementById('trip-name-input').value=tripInfo.name;
   document.getElementById('trip-start').value=tripInfo.startDate;
   document.getElementById('trip-end').value=tripInfo.endDate;
-  document.getElementById('trip-city-input').value=tripInfo.cityName||'';
-  const res=document.getElementById('city-result');
-  if(tripInfo.coords&&tripInfo.cityName){
-    res.textContent='✅ '+tripInfo.cityName+' ('+tripInfo.coords.lat.toFixed(2)+', '+tripInfo.coords.lon.toFixed(2)+')';
-    res.style.color='var(--green)';
-  } else {
-    res.textContent='';
-  }
   openModal('name-modal');
 }
 function saveTripInfo(){
