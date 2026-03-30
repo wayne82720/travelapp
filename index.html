@@ -58,7 +58,7 @@ body{
 .nav-subtitle{font-size:12px;color:var(--gray);margin-top:2px;letter-spacing:0.1px;}
 
 /* ── Tab content ────────────────────────────────────── */
-.tab-content{display:none;padding-bottom:calc(var(--tab-h) + 16px);}
+.tab-content{display:none;padding-bottom:calc(var(--tab-h) + 40px);}
 .tab-content.active{display:block;}
 
 /* ── Tab bar ────────────────────────────────────────── */
@@ -252,10 +252,10 @@ body{
 }
 .tenki-strip-hdr{
   display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:8px;
+  margin-bottom:8px;flex-wrap:wrap;gap:6px;
 }
-.tenki-logo{font-size:11px;color:var(--blue);font-weight:700;}
-.tenki-refresh{font-size:11px;color:var(--blue);cursor:pointer;font-weight:600;}
+.tenki-logo{font-size:11px;color:var(--blue);font-weight:700;flex-shrink:0;}
+.tenki-refresh{font-size:11px;color:var(--blue);cursor:pointer;font-weight:600;white-space:nowrap;}
 .tenki-divider{display:none;}
 .tenki-info{font-size:11px;color:var(--gray);}
 .tenki-days{display:flex;gap:0;}
@@ -268,6 +268,17 @@ body{
 .tenki-day-icon{font-size:20px;line-height:1;}
 .tenki-day-temp{color:var(--text);font-weight:700;font-size:11px;}
 .tenki-day-rain{font-weight:600;font-size:10.5px;}
+.tenki-city-btn{display:none;}/* removed */
+.tenki-city-select{
+  background:rgba(59,158,204,0.12);color:var(--blue);
+  border:1.5px solid rgba(59,158,204,0.3);border-radius:20px;
+  font-size:12px;font-weight:600;font-family:var(--font);
+  padding:4px 24px 4px 10px;outline:none;cursor:pointer;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%233B9ECC' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;
+  max-width:130px;
+}
 
 /* ── Prepare ─────────────────────────────────────────── */
 .sum-bar{
@@ -597,13 +608,65 @@ input[type="time"]::-webkit-calendar-picker-indicator{
     <div class="hero-dates" id="hero-dates">2025年4月10日 – 4月15日・6天5夜</div>
   </div>
 
-  <!-- Weather strip — current location forecast -->
+  <!-- Weather strip -->
   <div class="tenki-strip" id="tenki-strip">
     <div class="tenki-strip-hdr">
-      <span class="tenki-logo">🌤 當前位置天氣預報</span>
-      <span class="tenki-refresh" onclick="refreshLocationWeather()">更新</span>
+      <span class="tenki-logo">🌤 天氣預報</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <select id="tenki-city-select" class="tenki-city-select" onchange="onWeatherCitySelect(this)">
+          <optgroup label="🇯🇵 日本">
+            <option value="35.6895,139.6917">東京</option>
+            <option value="35.6762,139.6503">神奈川（橫濱）</option>
+            <option value="35.4437,139.6380">埼玉（さいたま）</option>
+            <option value="35.7056,139.7530">千葉</option>
+            <option value="36.5748,139.2394">栃木（宇都宮）</option>
+            <option value="36.3912,139.0608">群馬（前橋）</option>
+            <option value="36.0652,140.1326">茨城（水戸）</option>
+            <option value="43.0642,141.3469">北海道（札幌）</option>
+            <option value="40.8244,140.7400">青森</option>
+            <option value="39.7036,141.1527">岩手（盛岡）</option>
+            <option value="38.2688,140.8721">宮城（仙台）</option>
+            <option value="39.7186,140.1023">秋田</option>
+            <option value="38.2403,140.3633">山形</option>
+            <option value="37.7500,140.4675">福島</option>
+            <option value="37.9026,139.0232">新潟</option>
+            <option value="36.6953,137.2113">富山</option>
+            <option value="36.5944,136.6256">石川（金澤）</option>
+            <option value="36.0652,136.2216">福井</option>
+            <option value="35.6640,138.5684">山梨（甲府）</option>
+            <option value="36.6513,138.1812">長野（長野市）</option>
+            <option value="35.1815,136.9066">愛知（名古屋）</option>
+            <option value="35.0067,135.8683">三重（津）</option>
+            <option value="34.9756,136.6253">岐阜</option>
+            <option value="34.9769,138.3831">静岡</option>
+            <option value="34.6937,135.5023">大阪</option>
+            <option value="35.0116,135.7681">京都</option>
+            <option value="34.6913,135.1830">兵庫（神戸）</option>
+            <option value="34.6851,135.8048">奈良</option>
+            <option value="34.2260,135.1675">和歌山</option>
+            <option value="35.5023,134.2380">鳥取</option>
+            <option value="35.4723,133.0505">島根（松江）</option>
+            <option value="34.6618,133.9344">岡山</option>
+            <option value="34.3853,132.4553">広島</option>
+            <option value="34.1860,131.4707">山口</option>
+            <option value="34.0657,134.5594">徳島</option>
+            <option value="34.3401,134.0434">香川（高松）</option>
+            <option value="33.8417,132.7657">愛媛（松山）</option>
+            <option value="33.5597,133.5311">高知</option>
+            <option value="33.5902,130.4017">福岡</option>
+            <option value="33.2496,130.2988">佐賀</option>
+            <option value="32.7448,129.8737">長崎</option>
+            <option value="32.8031,130.7079">熊本</option>
+            <option value="33.2382,131.6126">大分</option>
+            <option value="31.9077,131.4202">宮崎</option>
+            <option value="31.5966,130.5571">鹿児島</option>
+            <option value="26.2124,127.6809">沖縄（那霸）</option>
+          </optgroup>
+        </select>
+        <span class="tenki-refresh" onclick="refreshLocationWeather()" title="GPS定位">📍</span>
+      </div>
     </div>
-    <div id="tenki-forecast" class="tenki-info">偵測位置中...</div>
+    <div id="tenki-forecast" class="tenki-info">請選擇城市</div>
   </div>
 
   <div id="itinerary-container"></div>
@@ -972,12 +1035,11 @@ let pendingDayCoords=null;
 let geocodeTimer=null;
 async function geocodeAddress(addr){
   if(!addr||addr.length<3)return;
+  // Don't geocode if it looks like a Maps URL
+  if(addr.startsWith('http'))return;
   clearTimeout(geocodeTimer);
   geocodeTimer=setTimeout(async()=>{
-    const res=document.getElementById('day-city-result');
     try{
-      // Extract meaningful part — last chunk often has city name
-      // Try full address first, then just first segment
       const q=addr.split(/\s+/).slice(0,3).join(' ');
       const url='https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=3&language=zh&format=json';
       const resp=await fetch(url,{mode:'cors'});
@@ -986,50 +1048,16 @@ async function geocodeAddress(addr){
       if(!data.results||!data.results.length)return;
       const r=data.results[0];
       pendingDayCoords={lat:r.latitude,lon:r.longitude,name:r.name+(r.admin1?', '+r.admin1:'')+(r.country?', '+r.country:'')};
-      document.getElementById('ev-day-city').value=pendingDayCoords.name;
-      res.textContent='📍 根據地址自動設定：'+pendingDayCoords.name;
-      res.style.color='var(--blue)';
-      // Deselect any chip
-      document.querySelectorAll('.city-chip').forEach(c=>c.classList.remove('selected'));
-    }catch(e){/* silent fail — user can still manually select */}
+    }catch(e){/* silent */}
   },800);
 }
 
 function selectDayCity(engName, lat, lon, label){
   pendingDayCoords={lat,lon,name:label};
-  document.getElementById('ev-day-city').value=label;
-  const res=document.getElementById('day-city-result');
-  res.textContent='✅ '+label;
-  res.style.color='var(--green)';
-  // Highlight selected chip
-  document.querySelectorAll('.city-chip').forEach(c=>{
-    c.classList.toggle('selected', c.textContent.includes(label));
-  });
 }
 
 async function searchDayCity(){
-  const q=document.getElementById('ev-day-city').value.trim();
-  const res=document.getElementById('day-city-result');
-  if(!q){res.textContent='';return;}
-  res.textContent='搜尋中...';res.style.color='var(--gray)';
-  try{
-    const url='https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=5&language=zh&format=json';
-    const resp=await fetch(url,{mode:'cors'});
-    if(!resp.ok){throw new Error('HTTP '+resp.status);}
-    const data=await resp.json();
-    if(!data.results||!data.results.length){
-      res.textContent='❌ 找不到「'+q+'」，請嘗試英文名稱（如 Tokyo、Osaka）';
-      res.style.color='var(--red)';pendingDayCoords=null;return;
-    }
-    const r=data.results[0];
-    pendingDayCoords={lat:r.latitude,lon:r.longitude,name:r.name+(r.admin1?', '+r.admin1:'')+(r.country?', '+r.country:'')};
-    res.textContent='✅ '+pendingDayCoords.name+' ('+r.latitude.toFixed(2)+', '+r.longitude.toFixed(2)+')';
-    res.style.color='var(--green)';
-  }catch(e){
-    res.textContent='❌ 搜尋失敗：'+e.message+'（請確認網路連線）';
-    res.style.color='var(--red)';
-    pendingDayCoords=null;
-  }
+  // No-op — city UI removed, geocoding handled by geocodeAddress
 }
 
 const LS_KEY='tp_v1';
@@ -1218,14 +1246,15 @@ async function fetchWeather(){
       let result=weatherCache[ck];
       if(!result){
         const url='https://api.open-meteo.com/v1/forecast?latitude='+coords.lat+'&longitude='+coords.lon
-          +'&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+          +'&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
           +'&timezone=auto&start_date='+tripInfo.startDate+'&end_date='+tripInfo.endDate;
         const data=await(await fetch(url)).json();
         result={};
         data.daily.time.forEach((iso,i)=>{
           const d2=new Date(iso+'T00:00:00');
           const key=(d2.getMonth()+1)+'月'+d2.getDate()+'日';
-          result[key]={icon:wmoToIcon(data.daily.weathercode[i]),min:Math.round(data.daily.temperature_2m_min[i]),max:Math.round(data.daily.temperature_2m_max[i]),rain:data.daily.precipitation_probability_max[i]||0};
+          const codes=data.daily.weather_code||data.daily.weathercode||[];
+          result[key]={icon:wmoToIcon(codes[i]||0),min:Math.round(data.daily.temperature_2m_min[i]),max:Math.round(data.daily.temperature_2m_max[i]),rain:data.daily.precipitation_probability_max[i]||0};
         });
         weatherCache[ck]=result;
       }
@@ -1241,50 +1270,92 @@ async function fetchWeather(){
 
 function refreshWeather(){weatherCache={};tripInfo._perDayWeather={};fetchWeather();}
 
+let selectedWeatherCity=null;
+
+function onWeatherCitySelect(sel){
+  const[lat,lon]=sel.value.split(',').map(Number);
+  const label=sel.options[sel.selectedIndex].text;
+  selectedWeatherCity={label,lat,lon};
+  fetchLocationWeather(lat,lon);
+}
+
+function initWeatherCityChips(){
+  // Auto-select based on trip name
+  const sel=document.getElementById('tenki-city-select');
+  if(!sel)return;
+  const name=tripInfo.name||'';
+  const prefMap={'東京':'東京','大阪':'大阪','京都':'京都','札幌':'北海道','福岡':'福岡','沖縄':'沖縄','沖繩':'沖縄','台北':'台北'};
+  for(const[key,city] of Object.entries(prefMap)){
+    if(name.includes(key)){
+      for(let i=0;i<sel.options.length;i++){
+        if(sel.options[i].text.includes(city)){sel.selectedIndex=i;break;}
+      }
+      break;
+    }
+  }
+  const[lat,lon]=sel.value.split(',').map(Number);
+  fetchLocationWeather(lat,lon);
+}
+
+function selectWeatherCity(label,lat,lon){
+  selectedWeatherCity={label,lat,lon};
+  fetchLocationWeather(lat,lon);
+}
+
 async function fetchLocationWeather(lat,lon){
+  const el=document.getElementById('tenki-forecast');
+  if(el){el.className='tenki-info';el.textContent='載入中...';}
   const today=new Date();
   const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const end=new Date(today);end.setDate(today.getDate()+2);
   const url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon
-    +'&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+    +'&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
     +'&timezone=auto&start_date='+fmt(today)+'&end_date='+fmt(end);
-  const data=await(await fetch(url)).json();
-  const labels=['今天','明天','後天'];
-  const weekdays=['日','一','二','三','四','五','六'];
-  const el=document.getElementById('tenki-forecast');
-  if(!el)return;
-  const items=data.daily.time.map((iso,i)=>{
-    const d=new Date(iso+'T00:00:00');
-    const w=data.daily;
-    const rain=w.precipitation_probability_max[i]||0;
-    const rainCol=rainColor(rain);
-    return '<div class="tenki-day">'
-      +'<div class="tenki-day-label">'+labels[i]+'（'+weekdays[d.getDay()]+'）</div>'
-      +'<div class="tenki-day-icon">'+wmoToIcon(w.weathercode[i])+'</div>'
-      +'<div class="tenki-day-temp">'+Math.round(w.temperature_2m_min[i])+'°－'+Math.round(w.temperature_2m_max[i])+'°</div>'
-      +'<div class="tenki-day-rain" style="color:'+rainCol+'">☔ '+rain+'%</div>'
-      +'</div>';
-  }).join('');
-  el.className='';
-  el.innerHTML='<div class="tenki-days">'+items+'</div>';
+  try{
+    const resp=await fetch(url,{mode:'cors'});
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const data=await resp.json();
+    const daily=data.daily;
+    const codes=daily.weather_code||daily.weathercode||[];
+    const labels=['今天','明天','後天'];
+    const weekdays=['日','一','二','三','四','五','六'];
+    if(!el)return;
+    const items=daily.time.map((iso,i)=>{
+      const d=new Date(iso+'T00:00:00');
+      const rain=daily.precipitation_probability_max[i]||0;
+      const rainCol=rainColor(rain);
+      return '<div class="tenki-day">'
+        +'<div class="tenki-day-label">'+labels[i]+'（'+weekdays[d.getDay()]+'）</div>'
+        +'<div class="tenki-day-icon">'+wmoToIcon(codes[i]||0)+'</div>'
+        +'<div class="tenki-day-temp">'+Math.round(daily.temperature_2m_min[i])+'°－'+Math.round(daily.temperature_2m_max[i])+'°</div>'
+        +'<div class="tenki-day-rain" style="color:'+rainCol+'">☔ '+rain+'%</div>'
+        +'</div>';
+    }).join('');
+    el.className='';
+    el.innerHTML='<div class="tenki-days">'+items+'</div>';
+  }catch(e){
+    if(el){el.className='tenki-info';el.textContent='載入失敗，請檢查網路後重試';}
+  }
 }
 
 async function refreshLocationWeather(){
   const el=document.getElementById('tenki-forecast');
-  if(el)el.textContent='偵測位置中...';
+  if(el){el.className='tenki-info';el.textContent='偵測位置中...';}
   if(!navigator.geolocation){
-    if(el)el.textContent='不支援定位';return;
+    // No geolocation — use first city or trip city
+    const c=selectedWeatherCity||tripInfo.coords||WEATHER_CITIES[0];
+    fetchLocationWeather(c.lat,c.lon);return;
   }
   navigator.geolocation.getCurrentPosition(
-    pos=>fetchLocationWeather(pos.coords.latitude,pos.coords.longitude)
-      .catch(()=>{if(el)el.textContent='天氣載入失敗';}),
-    ()=>{
-      // Fallback to trip default coords or Tokyo
-      const c=tripInfo.coords||{lat:35.6895,lon:139.6917};
-      fetchLocationWeather(c.lat,c.lon)
-        .catch(()=>{if(el)el.textContent='天氣載入失敗';});
+    pos=>{
+      // Clear dropdown selection indicator
+      fetchLocationWeather(pos.coords.latitude,pos.coords.longitude);
     },
-    {timeout:5000}
+    ()=>{
+      const sel=document.getElementById('tenki-city-select');
+      if(sel){const[lat,lon]=sel.value.split(',').map(Number);fetchLocationWeather(lat,lon);}
+    },
+    {timeout:6000,maximumAge:300000}
   );
 }
 
@@ -1621,7 +1692,9 @@ function deleteFromEditModal(){
 function openEvModal(dayIdx){
   addEvDayIdx=dayIdx; isEditingEvent=false;
   document.getElementById('ev-modal-title').textContent=`Day ${days[dayIdx].day} 新增事項`;
-  ['ev-title','ev-address','ev-note','ev-location'].forEach(id=>document.getElementById(id).value='');
+  ['ev-title','ev-address','ev-note','ev-location'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
   document.getElementById('ev-time').value='';
   document.getElementById('ev-amount').value='';
   document.getElementById('ev-type').value='景點';
@@ -1635,19 +1708,8 @@ function openEvModal(dayIdx){
   const d=new Date(tripInfo.startDate);
   d.setDate(d.getDate()+(dayIdx));
   document.getElementById('ev-date').value=d.toISOString().slice(0,10);
-  // Populate day city field
-  const dayCity=days[dayIdx].coords;
-  document.getElementById('ev-day-city').value=days[dayIdx].cityName||'';
-  const res=document.getElementById('day-city-result');
-  if(dayCity){
-    pendingDayCoords={...dayCity,name:days[dayIdx].cityName||''};
-    res.textContent='✅ '+(days[dayIdx].cityName||'已設定');
-    res.style.color='var(--green)';
-  } else {
-    pendingDayCoords=null;
-    res.textContent='未設定（將使用旅遊預設城市）';
-    res.style.color='var(--gray)';
-  }
+  // Store pending coords from day (used by geocodeAddress)
+  pendingDayCoords=days[dayIdx].coords?{...days[dayIdx].coords,name:days[dayIdx].cityName||''}:null;
   openModal('ev-modal');
 }
 
@@ -2124,7 +2186,7 @@ renderChecklists();
 renderExpenses();
 renderNotes();
 fetchWeather();
-refreshLocationWeather();
+initWeatherCityChips();
 </script>
 </body>
 </html>
