@@ -172,8 +172,7 @@ body{
   border-radius:6px;padding:2px 8px;font-weight:600;flex-shrink:0;
 }
 .day-weather{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;}
-.day-weather-main{font-size:11.5px;color:var(--gray);white-space:nowrap;font-weight:500;}
-.day-weather-rain{font-size:10.5px;font-weight:600;}
+.day-weather-inline{font-size:11.5px;color:var(--gray);font-weight:500;white-space:nowrap;flex-shrink:0;}
 .day-add-btn{
   padding:3px 0 3px 10px;
   background:none;color:var(--blue);
@@ -1042,7 +1041,7 @@ function refreshWeather(){
   // For now show toast
   const strip=document.querySelector('.tenki-info');
   strip.textContent='已更新 · '+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})+'（tenki.jp）';
-  setTimeout(()=>{strip.textContent='天氣資料來源：日本気象協会 tenki.jp（含降雨機率）';},3000);
+  setTimeout(()=>{strip.textContent='天氣資料來源：日本気象協会 tenki.jp';},3000);
 }
 
 // ===== DATA =====
@@ -1191,7 +1190,10 @@ function renderItinerary(){
     const dateObj=new Date(tripInfo.startDate);
     dateObj.setDate(dateObj.getDate()+di);
     const wdStr=`（${weekdays[dateObj.getDay()]}）`;
-    const weatherInline=w?`<span style="font-size:11.5px;color:var(--gray);font-weight:500;white-space:nowrap">${w.icon} ${w.min}°-${w.max}° <span style="color:${rainColor(w.rain)}">☔${w.rain}%</span></span>`:'';
+    const rainCol=rainColor(w?w.rain:0);
+    const weatherInline=w
+      ?('<span class="day-weather-inline">'+w.icon+' '+w.min+'°-'+w.max+'° <span style="color:'+rainCol+'">'+'☔'+w.rain+'%</span></span>')
+      :'';
     const evHtml=d.events.map((ev,ei)=>{
       const addrHtml=ev.addr?`<a class="tc-addr" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.addr)}" target="_blank" onclick="event.stopPropagation()">📍 ${ev.addr.split(' ')[0]}</a>`:'';
       const typeTagClass={
