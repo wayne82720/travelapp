@@ -172,6 +172,13 @@ body{
   border-radius:6px;padding:2px 8px;font-weight:600;flex-shrink:0;
 }
 .day-weather{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;}
+.city-chip{
+  display:inline-flex;align-items:center;padding:4px 10px;
+  border-radius:20px;background:white;border:1.5px solid var(--blue-glow);
+  color:var(--blue);font-size:12px;font-weight:600;cursor:pointer;
+  transition:all var(--transition);white-space:nowrap;
+}
+.city-chip:active,.city-chip.selected{background:var(--blue);color:white;border-color:var(--blue);}
 .day-weather-inline{font-size:11.5px;color:var(--gray);font-weight:500;white-space:nowrap;flex-shrink:0;}
 .day-add-btn{
   padding:3px 0 3px 10px;
@@ -579,9 +586,9 @@ input[type="time"]::-webkit-calendar-picker-indicator{
 
   <!-- Tenki source note -->
   <div class="tenki-strip">
-    <span class="tenki-logo">🌤 tenki.jp</span>
+    <span class="tenki-logo">🌤 天氣預報</span>
     <div class="tenki-divider"></div>
-    <div class="tenki-info">天氣資料來源：日本気象協会 tenki.jp</div>
+    <div class="tenki-info">天氣資料來源：Open-Meteo（實際預報）</div>
     <span class="tenki-refresh" onclick="refreshWeather()">更新</span>
   </div>
 
@@ -721,7 +728,8 @@ input[type="time"]::-webkit-calendar-picker-indicator{
     </div>
     <div class="mf">
       <label>地址（點選後開啟 Google Maps）</label>
-      <input class="m-input" id="ev-address" type="text" placeholder="輸入地址或搜尋關鍵字">
+      <input class="m-input" id="ev-address" type="text" placeholder="輸入地址或搜尋關鍵字"
+        onchange="geocodeAddress(this.value)">
     </div>
     <div class="mf">
       <label>備註</label>
@@ -767,7 +775,15 @@ input[type="time"]::-webkit-calendar-picker-indicator{
       <div class="modal-title">編輯旅遊資訊</div>
       <div class="modal-close" onclick="closeModal('name-modal')">✕</div>
     </div>
-    <div class="mf"><label>旅遊名稱</label><input class="m-input" id="trip-name-input" type="text" placeholder="例：東京 / 大阪 / 北海道"></div>
+    <div class="mf"><label>旅遊名稱</label><input class="m-input" id="trip-name-input" type="text" placeholder="例：🗼 東京"></div>
+    <div class="mf">
+      <label>目的地城市（用於天氣查詢）</label>
+      <div style="display:flex;gap:8px">
+        <input class="m-input" id="trip-city-input" type="text" placeholder="例：Tokyo、Osaka、Sapporo" style="flex:1">
+        <button onclick="searchCity()" style="flex-shrink:0;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);padding:0 16px;font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;">搜尋</button>
+      </div>
+      <div id="city-result" style="margin-top:6px;font-size:12px;color:var(--gray)"></div>
+    </div>
     <div style="display:flex;gap:10px;margin-bottom:14px">
       <div style="flex:1"><label style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;display:block;margin-bottom:6px">出發日期</label><input class="m-input" id="trip-start" type="date"></div>
       <div style="flex:1"><label style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;display:block;margin-bottom:6px">返回日期</label><input class="m-input" id="trip-end" type="date"></div>
@@ -932,6 +948,72 @@ function loadSharedData(){
     return true;
   }catch(e){return false;}
 }
+// Per-day city search state
+let pendingDayCoords=null;
+
+let geocodeTimer=null;
+async function geocodeAddress(addr){
+  if(!addr||addr.length<3)return;
+  clearTimeout(geocodeTimer);
+  geocodeTimer=setTimeout(async()=>{
+    const res=document.getElementById('day-city-result');
+    try{
+      // Extract meaningful part — last chunk often has city name
+      // Try full address first, then just first segment
+      const q=addr.split(/\s+/).slice(0,3).join(' ');
+      const url='https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=3&language=zh&format=json';
+      const resp=await fetch(url,{mode:'cors'});
+      if(!resp.ok)return;
+      const data=await resp.json();
+      if(!data.results||!data.results.length)return;
+      const r=data.results[0];
+      pendingDayCoords={lat:r.latitude,lon:r.longitude,name:r.name+(r.admin1?', '+r.admin1:'')+(r.country?', '+r.country:'')};
+      document.getElementById('ev-day-city').value=pendingDayCoords.name;
+      res.textContent='📍 根據地址自動設定：'+pendingDayCoords.name;
+      res.style.color='var(--blue)';
+      // Deselect any chip
+      document.querySelectorAll('.city-chip').forEach(c=>c.classList.remove('selected'));
+    }catch(e){/* silent fail — user can still manually select */}
+  },800);
+}
+
+function selectDayCity(engName, lat, lon, label){
+  pendingDayCoords={lat,lon,name:label};
+  document.getElementById('ev-day-city').value=label;
+  const res=document.getElementById('day-city-result');
+  res.textContent='✅ '+label;
+  res.style.color='var(--green)';
+  // Highlight selected chip
+  document.querySelectorAll('.city-chip').forEach(c=>{
+    c.classList.toggle('selected', c.textContent.includes(label));
+  });
+}
+
+async function searchDayCity(){
+  const q=document.getElementById('ev-day-city').value.trim();
+  const res=document.getElementById('day-city-result');
+  if(!q){res.textContent='';return;}
+  res.textContent='搜尋中...';res.style.color='var(--gray)';
+  try{
+    const url='https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=5&language=zh&format=json';
+    const resp=await fetch(url,{mode:'cors'});
+    if(!resp.ok){throw new Error('HTTP '+resp.status);}
+    const data=await resp.json();
+    if(!data.results||!data.results.length){
+      res.textContent='❌ 找不到「'+q+'」，請嘗試英文名稱（如 Tokyo、Osaka）';
+      res.style.color='var(--red)';pendingDayCoords=null;return;
+    }
+    const r=data.results[0];
+    pendingDayCoords={lat:r.latitude,lon:r.longitude,name:r.name+(r.admin1?', '+r.admin1:'')+(r.country?', '+r.country:'')};
+    res.textContent='✅ '+pendingDayCoords.name+' ('+r.latitude.toFixed(2)+', '+r.longitude.toFixed(2)+')';
+    res.style.color='var(--green)';
+  }catch(e){
+    res.textContent='❌ 搜尋失敗：'+e.message+'（請確認網路連線）';
+    res.style.color='var(--red)';
+    pendingDayCoords=null;
+  }
+}
+
 const LS_KEY='tp_v1';
 function saveData(){
   try{
@@ -982,6 +1064,14 @@ function startEditName(){
   document.getElementById('trip-name-input').value=tripInfo.name;
   document.getElementById('trip-start').value=tripInfo.startDate;
   document.getElementById('trip-end').value=tripInfo.endDate;
+  document.getElementById('trip-city-input').value=tripInfo.cityName||'';
+  const res=document.getElementById('city-result');
+  if(tripInfo.coords&&tripInfo.cityName){
+    res.textContent='✅ '+tripInfo.cityName+' ('+tripInfo.coords.lat.toFixed(2)+', '+tripInfo.coords.lon.toFixed(2)+')';
+    res.style.color='var(--green)';
+  } else {
+    res.textContent='';
+  }
   openModal('name-modal');
 }
 function saveTripInfo(){
@@ -1021,28 +1111,118 @@ function saveTripInfo(){
   closeModal('name-modal');
   renderItinerary();
   saveData();
+  fetchWeather();
 }
 
 // ===== WEATHER (tenki.jp simulated data for Tokyo) =====
 // Based on tenki.jp format: icon, temp range, rain probability (降水確率)
-const weatherData = {
-  '4月10日': {icon:'☁️',min:14,max:19,rain:40,desc:'曇り'},
-  '4月11日': {icon:'🌤',min:12,max:22,rain:20,desc:'晴れ時々曇り'},
-  '4月12日': {icon:'🌧',min:8,max:15,rain:80,desc:'雨'},
-  '4月13日': {icon:'🌦',min:10,max:17,rain:50,desc:'雨のち曇り'},
-  '4月14日': {icon:'🌤',min:11,max:20,rain:20,desc:'晴れ'},
-  '4月15日': {icon:'☀️',min:13,max:23,rain:10,desc:'晴れ'},
+// ===== WEATHER (Open-Meteo real API) =====
+const CITY_COORDS={
+  '東京':{lat:35.6895,lon:139.6917},'大阪':{lat:34.6937,lon:135.5023},
+  '京都':{lat:35.0116,lon:135.7681},'札幌':{lat:43.0642,lon:141.3469},
+  '福岡':{lat:33.5902,lon:130.4017},'沖繩':{lat:26.2124,lon:127.6809},
+  '首爾':{lat:37.5665,lon:126.9780},'台北':{lat:25.0330,lon:121.5654},
 };
-// Rain probability color
+
+let weatherCache={};
+
 function rainColor(r){return r>=70?'#FF3B30':r>=40?'#FF9500':'#4AACDB';}
 
-function refreshWeather(){
-  // In production this would call tenki.jp API
-  // For now show toast
-  const strip=document.querySelector('.tenki-info');
-  strip.textContent='已更新 · '+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})+'（tenki.jp）';
-  setTimeout(()=>{strip.textContent='天氣資料來源：日本気象協会 tenki.jp';},3000);
+function wmoToIcon(code){
+  if(code===0)return '☀️';
+  if(code<=2)return '🌤';
+  if(code===3)return '☁️';
+  if(code<=48)return '🌫';
+  if(code<=57)return '🌦';
+  if(code<=67)return '🌧';
+  if(code<=77)return '🌨';
+  if(code<=82)return '🌧';
+  if(code<=86)return '❄️';
+  return '⛈';
 }
+
+function getWeather(dateStr){
+  if(tripInfo._perDayWeather&&tripInfo._perDayWeather[dateStr])return tripInfo._perDayWeather[dateStr];
+  const key=tripInfo._weatherKey||'';
+  if(weatherCache[key])return weatherCache[key][dateStr]||null;
+  return null;
+}
+
+async function searchCity(){
+  const q=document.getElementById('trip-city-input').value.trim();
+  if(!q)return;
+  const res=document.getElementById('city-result');
+  res.textContent='搜尋中...';res.style.color='var(--gray)';
+  try{
+    const url='https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=5&language=zh&format=json';
+    const resp=await fetch(url,{mode:'cors'});
+    if(!resp.ok){throw new Error('HTTP '+resp.status);}
+    const data=await resp.json();
+    if(!data.results||!data.results.length){
+      res.textContent='❌ 找不到「'+q+'」，請嘗試英文名稱';
+      res.style.color='var(--red)';return;
+    }
+    const r=data.results[0];
+    tripInfo.coords={lat:r.latitude,lon:r.longitude};
+    tripInfo.cityName=r.name+(r.admin1?', '+r.admin1:'')+(r.country?', '+r.country:'');
+    res.textContent='✅ '+tripInfo.cityName+' ('+r.latitude.toFixed(2)+', '+r.longitude.toFixed(2)+')';
+    res.style.color='var(--green)';
+    weatherCache={};
+  }catch(e){
+    res.textContent='❌ 搜尋失敗：'+e.message+'（請確認網路連線）';
+    res.style.color='var(--red)';
+  }
+}
+
+async function fetchWeather(){
+  if(!tripInfo.startDate||!tripInfo.endDate)return;
+  const strip=document.querySelector('.tenki-info');
+  let defaultCoords=tripInfo.coords||null;
+  if(!defaultCoords){
+    for(const city of Object.keys(CITY_COORDS)){
+      if(tripInfo.name&&tripInfo.name.includes(city)){defaultCoords=CITY_COORDS[city];break;}
+    }
+  }
+  if(!defaultCoords)defaultCoords=CITY_COORDS['東京'];
+  // Group by unique coords
+  const groups={};
+  days.forEach(d=>{
+    const c=d.coords||defaultCoords;
+    const k=c.lat+','+c.lon;
+    if(!groups[k])groups[k]={coords:c,days:[]};
+    groups[k].days.push(d);
+  });
+  if(strip)strip.textContent='天氣載入中...';
+  const newPerDay={};
+  try{
+    await Promise.all(Object.values(groups).map(async({coords,days:gDays})=>{
+      const ck=coords.lat+','+coords.lon+','+tripInfo.startDate+','+tripInfo.endDate;
+      let result=weatherCache[ck];
+      if(!result){
+        const url='https://api.open-meteo.com/v1/forecast?latitude='+coords.lat+'&longitude='+coords.lon
+          +'&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+          +'&timezone=auto&start_date='+tripInfo.startDate+'&end_date='+tripInfo.endDate;
+        const data=await(await fetch(url)).json();
+        result={};
+        data.daily.time.forEach((iso,i)=>{
+          const d2=new Date(iso+'T00:00:00');
+          const key=(d2.getMonth()+1)+'月'+d2.getDate()+'日';
+          result[key]={icon:wmoToIcon(data.daily.weathercode[i]),min:Math.round(data.daily.temperature_2m_min[i]),max:Math.round(data.daily.temperature_2m_max[i]),rain:data.daily.precipitation_probability_max[i]||0};
+        });
+        weatherCache[ck]=result;
+      }
+      gDays.forEach(d=>{newPerDay[d.date]=result[d.date]||null;});
+    }));
+    tripInfo._perDayWeather=newPerDay;
+    if(strip)strip.textContent='天氣資料：Open-Meteo 實際預報';
+    renderItinerary();
+  }catch(e){
+    if(strip)strip.textContent='天氣載入失敗，請點更新重試';
+  }
+}
+
+function refreshWeather(){weatherCache={};tripInfo._perDayWeather={};fetchWeather();}
+
 
 // ===== DATA =====
 const JPY_RATE = 0.22;
@@ -1185,7 +1365,7 @@ function renderItinerary(){
   const weekdays=['日','一','二','三','四','五','六'];
   c.innerHTML=days.map((d,di)=>{
     // Always show day header so user can always add events
-    const w=weatherData[d.date];
+    const w=getWeather(d.date);
     // Compute weekday from tripInfo.startDate + di
     const dateObj=new Date(tripInfo.startDate);
     dateObj.setDate(dateObj.getDate()+di);
@@ -1378,6 +1558,19 @@ function openEvModal(dayIdx){
   const d=new Date(tripInfo.startDate);
   d.setDate(d.getDate()+(dayIdx));
   document.getElementById('ev-date').value=d.toISOString().slice(0,10);
+  // Populate day city field
+  const dayCity=days[dayIdx].coords;
+  document.getElementById('ev-day-city').value=days[dayIdx].cityName||'';
+  const res=document.getElementById('day-city-result');
+  if(dayCity){
+    pendingDayCoords={...dayCity,name:days[dayIdx].cityName||''};
+    res.textContent='✅ '+(days[dayIdx].cityName||'已設定');
+    res.style.color='var(--green)';
+  } else {
+    pendingDayCoords=null;
+    res.textContent='未設定（將使用旅遊預設城市）';
+    res.style.color='var(--gray)';
+  }
   openModal('ev-modal');
 }
 
@@ -1417,6 +1610,12 @@ function saveEvent(){
     // Amount cleared — remove linked expense
     expenses=expenses.filter(e=>e.id!==ev.expenseId);
     ev.expenseId=null;
+  }
+  // Save city coords to the day if set
+  if(pendingDayCoords){
+    days[addEvDayIdx].coords={lat:pendingDayCoords.lat,lon:pendingDayCoords.lon};
+    days[addEvDayIdx].cityName=pendingDayCoords.name;
+    weatherCache={}; // invalidate cache
   }
   if(isEditingEvent){
     days[addEvDayIdx].events[editEvIdx]=ev;
@@ -1846,6 +2045,7 @@ renderItinerary();
 renderChecklists();
 renderExpenses();
 renderNotes();
+fetchWeather();
 </script>
 </body>
 </html>
